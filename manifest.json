@@ -1,0 +1,34 @@
+{
+  "package": "dns-syncer-agent-package",
+  "product_name": "DNS Syncer",
+  "brand_line": "by DataDreamer",
+  "repo_slug": "dns-syncer",
+  "source_of_truth": "agent-workspace/PRD.md",
+  "asset_policy": {
+    "brand": "DataDreamer logo files only.",
+    "reference": "DataDreamer Observatory design system reference.",
+    "ui_inspiration": "Layout/density inspiration only. Do not copy exactly."
+  },
+  "files_copied": [
+    "agent-workspace/assets/brand/datadreamer-logo.svg",
+    "agent-workspace/assets/brand/datadreamer-logo-alt.svg",
+    "agent-workspace/assets/reference/datadreamer-observatory-design-system.md",
+    "agent-workspace/assets/ui-inspiration/layout-density-reference.png",
+    "agent-workspace/assets/ui-inspiration/inspiration-overview.png",
+    "agent-workspace/assets/ui-inspiration/inspiration-settings.png",
+    "agent-workspace/assets/ui-inspiration/inspiration-token.png",
+    "agent-workspace/assets/ui-inspiration/inspiration-api.png",
+    "agent-workspace/assets/ui-inspiration/inspiration-logs.png",
+    "agent-workspace/assets/ui-inspiration/inspiration-records.png",
+    "agent-workspace/assets/ui-inspiration/earlier-html-direction-reference.html"
+  ],
+  "golden_rule": "Fast. Secure. Resource-efficient.",
+  "runtime_policy": {
+    "docker_required": false,
+    "database_required": false,
+    "node_runtime_in_production": false,
+    "frontend": "static HTML/CSS/vanilla JS preferred",
+    "scheduler": "systemd timer",
+    "logs": "capped JSONL"
+  }
+}

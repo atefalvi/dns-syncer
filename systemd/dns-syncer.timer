@@ -1,0 +1,11 @@
+[Unit]
+Description=Run DNS Syncer on schedule
+
+[Timer]
+OnBootSec=2min
+OnUnitActiveSec=30min
+Unit=dns-syncer-sync.service
+Persistent=true
+
+[Install]
+WantedBy=timers.target

@@ -1,0 +1,19 @@
+[Unit]
+Description=DNS Syncer local web application
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=dns-syncer
+Group=dns-syncer
+WorkingDirectory=/opt/dns-syncer
+Environment=DNS_SYNCER_FRONTEND=/opt/dns-syncer/frontend
+ExecStart=/opt/dns-syncer/.venv/bin/uvicorn app.main:app --host 0.0.0.0 --port 5055
+Restart=on-failure
+RestartSec=5
+NoNewPrivileges=true
+ProtectSystem=full
+
+[Install]
+WantedBy=multi-user.target

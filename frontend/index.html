@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>DNS Syncer — by DataDreamer</title>
+  <link rel="icon" href="/assets/datadreamer-logo.svg">
+  <link rel="stylesheet" href="/styles/tokens.css">
+  <link rel="stylesheet" href="/styles/base.css">
+  <link rel="stylesheet" href="/styles/app.css">
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="brand">
+        <img src="/assets/datadreamer-logo.svg" alt="DataDreamer">
+        <div>
+          <div class="name">DNS Syncer</div>
+          <div class="by">by DataDreamer</div>
+        </div>
+      </div>
+      <nav class="nav" id="nav"></nav>
+      <div class="sidebar-foot">DNS Syncer<br>v0.1.0</div>
+    </aside>
+
+    <main class="main">
+      <header class="header">
+        <div class="title">
+          <h1>DNS Syncer</h1>
+          <span id="health" class="pill">…</span>
+        </div>
+        <div class="actions">
+          <button class="btn btn-secondary" id="btn-verify">Verify Token</button>
+          <button class="btn btn-primary" id="btn-sync">Run Sync</button>
+        </div>
+      </header>
+      <section class="view" id="view"></section>
+    </main>
+  </div>
+
+  <script type="module" src="/js/app.js"></script>
+</body>
+</html>

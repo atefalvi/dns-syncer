@@ -1,0 +1,20 @@
+# Local runtime data (dev mode) — never commit secrets/logs/state
+.local/
+*.enc
+*.key
+
+# Python
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+*.egg-info/
+build/
+dist/
+
+# Editor / OS / tooling
+.claude/
+.vscode/
+.idea/
+.DS_Store
+.env

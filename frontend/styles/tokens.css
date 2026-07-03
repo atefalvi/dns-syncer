@@ -1,0 +1,42 @@
+/* DataDreamer Observatory — dark tokens (§3.1). DNS Syncer is dark-only. */
+:root {
+  --bg-0: #0A0C10;
+  --bg-1: #0F1318;
+  --bg-2: #161B22;
+  --bg-3: #1D242E;
+  --border-1: #1F262F;
+  --border-2: #2E3744;
+  --text-1: #EDEFF3;
+  --text-2: #A8B1BD;
+  --text-3: #858E99;
+  --text-on-accent: #05070A;
+  --accent: #FF5C38;
+  --accent-hover: #FF7657;
+  --accent-press: #E04A2A;
+  --accent-subtle: rgba(255, 92, 56, 0.12);
+  --success: #3ECF8E;
+  --warning: #F5B83D;
+  --danger: #F0564A;
+  --info: #5CA7FF;
+  --focus-ring: #7AB8FF;
+
+  --font-text: "Inter", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+
+  --space-1: 4px; --space-2: 8px; --space-3: 12px; --space-4: 16px;
+  --space-5: 24px; --space-6: 32px; --space-7: 48px;
+
+  --radius-sm: 6px; --radius-md: 10px; --radius-lg: 16px; --radius-full: 999px;
+  --shadow-2: 0 8px 24px rgba(0, 0, 0, 0.35);
+  --shadow-3: 0 16px 48px rgba(0, 0, 0, 0.45);
+
+  --dur-1: 120ms; --dur-2: 200ms;
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+
+  --sidebar-w: 260px;
+  --header-h: 60px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root { --dur-1: 1ms; --dur-2: 1ms; }
+}

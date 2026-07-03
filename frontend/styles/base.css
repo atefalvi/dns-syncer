@@ -1,0 +1,30 @@
+/* Thin reset + base element styles. */
+*, *::before, *::after { box-sizing: border-box; }
+* { margin: 0; }
+
+html, body { height: 100%; }
+
+body {
+  font-family: var(--font-text);
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--text-1);
+  background: var(--bg-0);
+  -webkit-font-smoothing: antialiased;
+}
+
+a { color: var(--accent); text-decoration: none; }
+a:hover { color: var(--accent-hover); }
+
+button, input, select, textarea { font: inherit; color: inherit; }
+
+:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+code, .mono, .num { font-family: var(--font-mono); }
+
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-thumb { background: var(--border-2); border-radius: var(--radius-full); }
+::-webkit-scrollbar-track { background: transparent; }
