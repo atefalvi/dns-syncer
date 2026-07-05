@@ -12,6 +12,10 @@ RETRY_DELAYS = [2, 5]  # seconds between attempts
 
 MAX_LOG_ENTRIES = 1000
 
+# GitHub repo used for release update checks and the updater script.
+GITHUB_REPO = "atefalvi/dns-syncer"
+UPDATE_SCRIPT = "/opt/dns-syncer/update.sh"
+
 # Events that integrations may subscribe to.
 TRIGGER_EVENTS = [
     "SYNC_COMPLETE",

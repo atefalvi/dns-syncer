@@ -1,5 +1,5 @@
 import { api } from "../api.js";
-import { esc, relTime, absTime } from "../format.js";
+import { esc, relTime, fmtDateTime, fmtShort } from "../format.js";
 import { toast, modal } from "../state.js";
 
 const FILTERS = [
@@ -16,6 +16,7 @@ export async function render(view) {
         `<button class="chip ${id === "all" ? "active" : ""}" data-f="${id}">${l}</button>`).join("")}</div>
       <div class="spacer"></div>
       <input type="text" id="search" placeholder="Search logs…">
+      <button class="btn btn-secondary" id="reload">Refresh</button>
       <a class="btn btn-secondary" href="/api/logs/export">Export CSV</a>
     </div>
     <div class="cols">
@@ -31,6 +32,7 @@ export async function render(view) {
     view.querySelectorAll(".chip").forEach(c => c.classList.remove("active"));
     b.classList.add("active"); state.filter = b.dataset.f; state.page = 1; load();
   });
+  view.querySelector("#reload").addEventListener("click", () => load());
   let t; view.querySelector("#search").addEventListener("input", (e) => {
     clearTimeout(t); t = setTimeout(() => { state.q = e.target.value; state.page = 1; load(); }, 250);
   });
@@ -50,10 +52,10 @@ export async function render(view) {
       tbl.innerHTML = `<div class="table-wrap"><table>
         <thead><tr><th>Time</th><th>Level</th><th>Event</th><th>Message</th><th>Record</th><th></th></tr></thead>
         <tbody>${entries.map((e, i) => `<tr>
-          <td class="mono" title="${esc(absTime(e.timestamp))}">${relTime(e.timestamp)}</td>
+          <td class="mono" style="white-space:nowrap" title="${esc(fmtDateTime(e.timestamp))}">${fmtShort(e.timestamp)}</td>
           <td><span class="dot ${esc(e.level)}"></span> ${esc(e.level)}</td>
-          <td class="mono">${esc(e.event)}</td>
-          <td>${esc(e.message)}</td>
+          <td class="mono trunc" title="${esc(e.event)}">${esc(e.event)}</td>
+          <td class="trunc" title="${esc(e.message)}">${esc(e.message)}</td>
           <td class="mono">${esc(e.record || "—")}</td>
           <td><button class="btn btn-ghost btn-sm" data-i="${i}">Details</button></td>
         </tr>`).join("")}</tbody></table></div>${pager(data)}`;
@@ -91,7 +93,7 @@ export async function render(view) {
     const json = JSON.stringify(e, null, 2);
     const m = modal(`<h3>Log Detail</h3>
       <div class="field"><label>Event</label><div class="mono">${esc(e.event)}</div></div>
-      <div class="field"><label>Timestamp</label><div class="mono">${esc(absTime(e.timestamp))}</div></div>
+      <div class="field"><label>Timestamp</label><div>${esc(fmtDateTime(e.timestamp))}</div></div>
       <div class="field"><label>Message</label><div>${esc(e.message)}</div></div>
       <div class="field"><label>Details JSON</label><pre class="json">${esc(json)}</pre></div>
       <div class="modal-actions">

@@ -69,7 +69,40 @@ export async function render(view) {
         <div class="field"><label>Retry delays</label><input type="text" value="${(adv.retry_delays || [2, 5]).join(", ")}s" disabled></div>
       </div>`)}
 
+    ${section("About & Updates", `
+      <div class="hrow"><span class="k">Version</span><span class="mono" id="cur-ver">…</span></div>
+      <div class="hrow" id="latest-row" style="display:none"><span class="k">Latest release</span><span class="mono" id="latest-ver"></span></div>
+      <div class="row" style="margin-top:var(--space-3)">
+        <button class="btn btn-secondary" id="check-upd" style="flex:0 0 auto">Check for Updates</button>
+        <button class="btn btn-primary" id="run-upd" style="flex:0 0 auto;display:none">Update Now</button>
+      </div>
+      <div class="hint">Updates download the latest release from GitHub, reinstall, and restart the service.</div>`)}
+
     <button class="btn btn-primary" id="save" style="margin-top:var(--space-3)">Save Settings</button>`;
+
+  // About & Updates
+  api.get("/health").then(h => { view.querySelector("#cur-ver").textContent = "v" + h.version; }).catch(() => {});
+  view.querySelector("#check-upd").addEventListener("click", async (e) => {
+    e.target.disabled = true; e.target.textContent = "Checking…";
+    try {
+      const r = await api.get("/update/check");
+      const row = view.querySelector("#latest-row");
+      row.style.display = ""; view.querySelector("#latest-ver").textContent = "v" + (r.latest || "?");
+      if (r.update_available) {
+        view.querySelector("#run-upd").style.display = "";
+        toast(`Update available: v${r.latest}`, "success");
+      } else {
+        toast("You're on the latest version", "success");
+      }
+    } catch (err) { toast(err.message, "error"); }
+    e.target.disabled = false; e.target.textContent = "Check for Updates";
+  });
+  view.querySelector("#run-upd").addEventListener("click", async (e) => {
+    if (!confirm("Update DNS Syncer now? The app restarts in about a minute.")) return;
+    e.target.disabled = true; e.target.textContent = "Updating…";
+    try { const r = await api.post("/update/run"); toast(r.message, "success"); }
+    catch (err) { toast(err.message, "error"); e.target.disabled = false; e.target.textContent = "Update Now"; }
+  });
 
   // Token controls
   view.querySelector("#reveal").addEventListener("click", (e) => {

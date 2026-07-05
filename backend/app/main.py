@@ -12,7 +12,7 @@ app.include_router(router)
 
 @app.on_event("startup")
 def _on_startup():
-    log_store.append("INFO", "SERVICE_STARTED", "DNS Syncer web service started")
+    log_store.append("INFO", "SERVICE_STARTED", "Service started")
 
 
 @app.get("/")

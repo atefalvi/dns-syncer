@@ -66,6 +66,11 @@ document.getElementById("btn-verify").addEventListener("click", async (e) => {
   e.target.disabled = false; refreshHealth();
 });
 
+// Real version in the sidebar footer.
+api.get("/health").then(h => {
+  document.querySelector(".sidebar-foot").innerHTML = `DNS Syncer<br>v${h.version}`;
+}).catch(() => {});
+
 window.addEventListener("hashchange", route);
 route();
 refreshHealth();

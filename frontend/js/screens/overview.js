@@ -1,5 +1,5 @@
 import { api } from "../api.js";
-import { esc, relTime, absTime } from "../format.js";
+import { esc, relTime, fmtDateTime } from "../format.js";
 
 const EVENT_LABEL = (e) => (e || "").replace(/_/g, " ").toLowerCase()
   .replace(/\b\w/g, (c) => c.toUpperCase());
@@ -17,14 +17,30 @@ export async function render(view) {
       api.get("/records"),
       api.get("/logs?page_size=5"),
     ]);
-    view.querySelector("#ov").innerHTML = cards(status, records) + panels(status, logs, records);
+    view.querySelector("#ov").innerHTML =
+      setupBanner(status) + cards(status, records) + panels(status, logs, records);
+    const go = view.querySelector("#go-settings");
+    if (go) go.addEventListener("click", () => { location.hash = "#settings"; });
+  }
+
+  function setupBanner(s) {
+    if (s.token_status !== "missing") return "";
+    return `<div class="card banner" style="margin-bottom:var(--space-4)">
+      <div>
+        <div class="card-title" style="margin-bottom:4px">Get started</div>
+        <div style="color:var(--text-2);font-size:13px">
+          1. Add your Cloudflare token &nbsp;→&nbsp; 2. Verify &amp; pick a zone &nbsp;→&nbsp; 3. Add a record &nbsp;→&nbsp; 4. Run Sync
+        </div>
+      </div>
+      <button class="btn btn-primary" id="go-settings">Open Settings</button>
+    </div>`;
   }
 
   function cards(s, records) {
     const okCount = records.filter(r => ["synced", "updated"].includes(r.status)).length;
     return `<div class="grid grid-4" style="margin-bottom:var(--space-4)">
       ${stat("Current IP", s.current_ip || "—", "Auto-detected")}
-      ${stat("Last Sync", s.last_sync_at ? relTime(s.last_sync_at) : "Never", absTime(s.last_sync_at))}
+      ${stat("Last Sync", s.last_sync_at ? relTime(s.last_sync_at) : "Never", fmtDateTime(s.last_sync_at))}
       ${stat("Records", records.length, `${okCount} OK`)}
       ${stat("Token", s.token_masked || "Not set", tokenBadge(s.token_status))}
     </div>`;
@@ -53,9 +69,9 @@ export async function render(view) {
     if (!entries.length) return `<div class="empty">No activity yet. Run a sync.</div>`;
     return `<div class="table-wrap"><table><tbody>` + entries.map(e => `<tr>
       <td style="width:1px"><span class="dot ${esc(e.level)}"></span></td>
-      <td class="mono" style="width:150px">${esc(EVENT_LABEL(e.event))}</td>
-      <td>${esc(e.message)}</td>
-      <td class="mono" style="width:80px;text-align:right">${relTime(e.timestamp)}</td>
+      <td class="mono trunc" style="width:140px" title="${esc(e.event)}">${esc(EVENT_LABEL(e.event))}</td>
+      <td class="trunc" title="${esc(e.message)}">${esc(e.message)}</td>
+      <td class="mono" style="width:80px;text-align:right" title="${esc(fmtDateTime(e.timestamp))}">${relTime(e.timestamp)}</td>
     </tr>`).join("") + `</tbody></table></div>`;
   }
 

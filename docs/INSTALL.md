@@ -44,6 +44,20 @@ DNS_SYNCER_DEV=1 uvicorn app.main:app --reload --port 5055
 
 Open http://localhost:5055. Run tests with `pytest`.
 
+## Updating
+
+From the web UI: **Settings → About & Updates → Check for Updates → Update Now**.
+
+Or from the shell on the device:
+
+```bash
+sudo /opt/dns-syncer/update.sh
+```
+
+Both download the latest GitHub release, reinstall, and restart the service.
+Config, secrets, state, and logs are preserved (the installer never touches
+`/etc/dns-syncer`, `/var/lib/dns-syncer`, or `/var/log/dns-syncer` contents).
+
 ## Uninstall
 
 ```bash

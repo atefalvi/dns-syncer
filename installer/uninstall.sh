@@ -8,6 +8,7 @@ echo "DNS Syncer uninstaller"
 systemctl disable --now $APP.timer 2>/dev/null || true
 systemctl disable --now $APP.service 2>/dev/null || true
 rm -f /etc/systemd/system/$APP.service /etc/systemd/system/$APP-sync.service /etc/systemd/system/$APP.timer
+rm -f /etc/sudoers.d/$APP
 systemctl daemon-reload
 echo "✓ Services stopped and removed"
 

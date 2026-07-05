@@ -1,5 +1,5 @@
 import { api } from "../api.js";
-import { esc, relTime } from "../format.js";
+import { esc, relTime, fmtDateTime } from "../format.js";
 import { toast, modal } from "../state.js";
 import { statusPill } from "./overview.js";
 
@@ -58,7 +58,7 @@ export async function render(view) {
       <td class="mono">${esc(r.cloudflare_value || "—")}</td>
       <td class="mono">${esc(r.target_ip || "—")}</td>
       <td>${statusPill(r.enabled ? r.status : "paused")}</td>
-      <td class="mono">${relTime(r.last_updated_at)}</td>
+      <td class="mono" title="${esc(fmtDateTime(r.last_updated_at))}">${relTime(r.last_updated_at)}</td>
       <td><button class="btn btn-ghost btn-sm" data-del="${esc(r.id)}">Delete</button></td>
     </tr>`;
   }

@@ -1,11 +1,14 @@
 """Local HTTP API. All routes are mounted under /api by main.py."""
+import os
 import subprocess
 import time
 import uuid
 
+import httpx
 from fastapi import APIRouter, HTTPException, Query, Response
 
 from app import VERSION
+from app.settings import GITHUB_REPO, UPDATE_SCRIPT
 from app import (cloudflare_client as cf, config_store, integration_engine,
                  ip_provider, log_store, secret_store, sync_engine)
 from app.models import (AppSettings, IntegrationConfig, IntegrationPatch,
@@ -56,6 +59,49 @@ def status():
         "service_status": _systemd_active("dns-syncer.service"),
         "timer_status": _systemd_active("dns-syncer.timer"),
     }
+
+
+# --- updates ---
+
+def _ver_tuple(v: str) -> tuple:
+    try:
+        return tuple(int(x) for x in v.strip().lstrip("v").split("."))
+    except ValueError:
+        return ()
+
+
+@router.get("/update/check")
+def update_check():
+    try:
+        r = httpx.get(f"https://api.github.com/repos/{GITHUB_REPO}/releases/latest",
+                      timeout=10, headers={"User-Agent": "dns-syncer",
+                                           "Accept": "application/vnd.github+json"})
+        r.raise_for_status()
+        latest = r.json().get("tag_name", "").lstrip("v")
+    except Exception as e:
+        raise HTTPException(502, f"Update check failed: {e}")
+    return {
+        "current": VERSION,
+        "latest": latest,
+        "update_available": bool(latest) and _ver_tuple(latest) > _ver_tuple(VERSION),
+    }
+
+
+@router.post("/update/run")
+def update_run():
+    if not os.path.exists(UPDATE_SCRIPT):
+        raise HTTPException(400, "Updater not installed. Run on the device: "
+                                 "sudo bash update.sh (from the dns-syncer repo)")
+    # systemd-run detaches the update from this service's cgroup, so the
+    # updater survives the service restart it performs.
+    proc = subprocess.run(["sudo", "-n", UPDATE_SCRIPT, "--detach"],
+                          capture_output=True, text=True, timeout=30)
+    if proc.returncode != 0:
+        raise HTTPException(502, "Could not start updater: "
+                            + (proc.stderr.strip() or "sudo not permitted. "
+                               "Re-run the installer, or run: sudo /opt/dns-syncer/update.sh"))
+    log_store.append("INFO", "UPDATE_STARTED", "Update started from web UI")
+    return {"started": True, "message": "Updating — the app restarts in about a minute."}
 
 
 # --- sync ---

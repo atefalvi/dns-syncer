@@ -55,7 +55,7 @@ def _update_with_retry(rec: dict, public_ip: str) -> dict:
 def run_sync() -> dict:
     started = _now()
     t0 = time.time()
-    log_store.append("INFO", "SYNC_START", "Starting sync cycle")
+    log_store.append("INFO", "SYNC_START", "Sync started")
 
     cfg = config_store.load()
     records = [r for r in cfg.get("records", []) if r.get("enabled", True)]
@@ -64,7 +64,7 @@ def run_sync() -> dict:
     # 1. public IP
     try:
         public_ip = ip_provider.get_public_ip()
-        log_store.append("INFO", "IP_DETECTED", "Public IP detected",
+        log_store.append("INFO", "IP_DETECTED", f"Public IP: {public_ip}",
                          details={"ip": public_ip})
     except Exception as e:
         msg = f"Could not detect public IP: {e}"
@@ -78,7 +78,7 @@ def run_sync() -> dict:
                 "records_failed": 0, "message": msg}
 
     if state.get("last_public_ip") == public_ip:
-        log_store.append("INFO", "IP_UNCHANGED", "Public IP unchanged",
+        log_store.append("INFO", "IP_UNCHANGED", "IP unchanged",
                          details={"ip": public_ip})
 
     checked = updated = failed = 0
@@ -96,7 +96,7 @@ def run_sync() -> dict:
 
         if current == public_ip:
             rec["status"] = "synced"
-            log_store.append("INFO", "RECORD_UNCHANGED", f"{rec['fqdn']} already current",
+            log_store.append("INFO", "RECORD_UNCHANGED", f"{rec['fqdn']} unchanged",
                              record=rec["fqdn"])
             continue
 
@@ -107,7 +107,8 @@ def run_sync() -> dict:
             rec["status"] = "updated"
             rec["last_updated_at"] = _now()
             updated += 1
-            log_store.append("INFO", "RECORD_UPDATED", f"{rec['type']} record updated",
+            log_store.append("INFO", "RECORD_UPDATED",
+                             f"{rec['type']} {old or '?'} → {public_ip}",
                              record=rec["fqdn"], details={"old_ip": old, "new_ip": public_ip})
             integration_engine.dispatch("RECORD_UPDATED", {
                 "message": f"{rec['fqdn']} updated to {public_ip}", "status": "updated",
