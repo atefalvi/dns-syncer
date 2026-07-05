@@ -6,7 +6,7 @@ DNS Syncer runs on any Debian-based Linux host with `systemd` and Python 3.11+
 ## One-command install
 
 ```bash
-git clone <repo-url> dns-syncer
+git clone https://github.com/atefalvi/dns-syncer.git
 cd dns-syncer
 sudo bash installer/install.sh
 ```
