@@ -31,6 +31,24 @@ def test_no_change(monkeypatch):
     assert called == []  # never touched Cloudflare
 
 
+def test_sync_complete_dispatch_has_record_context(monkeypatch):
+    _add_record("203.0.113.42")
+    events = []
+    monkeypatch.setattr(integration_engine, "dispatch",
+                        lambda event, ctx: events.append((event, ctx)))
+    sync_engine.run_sync()
+
+    event, ctx = events[-1]
+    assert event == "SYNC_COMPLETE"
+    assert ctx["record_name"] == "home.example.com"
+    assert ctx["record_type"] == "A"
+    assert ctx["zone"] == "example.com"
+    assert ctx["records_checked"] == 1
+    assert ctx["records_updated"] == 0
+    assert ctx["records_unchanged"] == 1
+    assert ctx["records"][0]["record_name"] == "home.example.com"
+
+
 def test_update_success(monkeypatch):
     _add_record("198.51.100.17")
     monkeypatch.setattr(sync_engine.cf, "update_record", lambda *a, **k: {"id": "r1"})

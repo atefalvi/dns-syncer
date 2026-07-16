@@ -9,10 +9,11 @@ const PRESETS = {
   webhook: { name: "Generic Webhook", body: {
     source: "dns-syncer", product: "DNS Syncer by DataDreamer", event: "{{event}}",
     message: "{{message}}", old_ip: "{{old_ip}}", new_ip: "{{new_ip}}",
-    record: "{{record_name}}", zone: "{{zone}}", timestamp: "{{timestamp}}" } },
-  discord: { name: "Discord alerts", body: { content: "**DNS Syncer**\n{{message}}\n`{{old_ip}} → {{new_ip}}`" } },
-  slack: { name: "Slack alerts", body: { text: "*DNS Syncer* — {{message}} (`{{old_ip}} → {{new_ip}}`)" } },
-  teams: { name: "Teams alerts", body: { text: "DNS Syncer — {{message}} ({{old_ip}} → {{new_ip}})" } },
+    record: "{{record_name}}", zone: "{{zone}}", records_updated: "{{records_updated}}",
+    records_failed: "{{records_failed}}", timestamp: "{{timestamp}}" } },
+  discord: { name: "Discord alerts", body: { content: "**DNS Syncer**\n{{message}}\nCurrent IP: `{{new_ip}}`" } },
+  slack: { name: "Slack alerts", body: { text: "*DNS Syncer* — {{message}} (current IP: `{{new_ip}}`)" } },
+  teams: { name: "Teams alerts", body: { text: "DNS Syncer — {{message}} (current IP: {{new_ip}})" } },
 };
 
 export async function render(view) {
@@ -97,7 +98,7 @@ function editor(existing, presetType, onDone) {
       <textarea id="headers" style="min-height:60px">${esc(JSON.stringify(existing?.headers || {}, null, 2))}</textarea></div>
     <div class="field"><label>Body Template (JSON)</label>
       <textarea id="body">${esc(JSON.stringify(body, null, 2))}</textarea>
-      <div class="hint">Variables: {{event}} {{message}} {{old_ip}} {{new_ip}} {{record_name}} {{zone}} {{timestamp}}</div></div>
+      <div class="hint">Variables: {{event}} {{message}} {{old_ip}} {{new_ip}} {{record_name}} {{record_type}} {{zone}} {{records_checked}} {{records_updated}} {{records_unchanged}} {{records_failed}} {{records}} {{timestamp}}</div></div>
     <div class="modal-actions">
       <button class="btn btn-secondary" id="cancel">Cancel</button>
       <button class="btn btn-primary" id="save">Save Integration</button>

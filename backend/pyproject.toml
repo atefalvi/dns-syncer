@@ -1,6 +1,6 @@
 [project]
 name = "dns-syncer"
-version = "0.2.1"
+version = "0.2.2"
 description = "DNS Syncer by DataDreamer — lightweight Cloudflare DNS updater for Raspberry Pi"
 requires-python = ">=3.11"
 dependencies = [

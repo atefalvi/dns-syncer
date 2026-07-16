@@ -4,20 +4,35 @@ URLs and custom headers live in the encrypted secret store, keyed by integration
 id, and are never logged.
 """
 import json
+import re
 
 import httpx
 
 from app import config_store, log_store, secret_store
 from app.settings import HTTP_TIMEOUT, USER_AGENT
 
+_TOKEN_RE = re.compile(r"{{\s*([A-Za-z0-9_]+)\s*}}")
+
+
+def _stringify(val) -> str:
+    if val is None:
+        return ""
+    if isinstance(val, (dict, list)):
+        return json.dumps(val, separators=(",", ":"))
+    return str(val)
+
 
 def render(template, ctx: dict):
-    """Recursively substitute {{var}} tokens in strings within a template."""
+    """Recursively substitute {{var}} tokens in strings within a template.
+
+    Unknown variables render as empty strings so webhook receivers never see raw
+    template tokens such as ``{{record_name}}``.
+    """
     if isinstance(template, str):
-        out = template
-        for key, val in ctx.items():
-            out = out.replace("{{" + key + "}}", str(val if val is not None else ""))
-        return out
+        exact = _TOKEN_RE.fullmatch(template.strip())
+        if exact:
+            return ctx.get(exact.group(1), "")
+        return _TOKEN_RE.sub(lambda m: _stringify(ctx.get(m.group(1), "")), template)
     if isinstance(template, dict):
         return {k: render(v, ctx) for k, v in template.items()}
     if isinstance(template, list):

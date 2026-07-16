@@ -52,6 +52,28 @@ def _update_with_retry(rec: dict, public_ip: str) -> dict:
     return {"status": "failed", "error": last_err.message if last_err else "unknown"}
 
 
+def _record_ctx(rec: dict, old_ip: str | None, new_ip: str, status: str,
+                timestamp: str, error: str = "") -> dict:
+    return {
+        "record_name": rec.get("fqdn", ""),
+        "record_type": rec.get("type", ""),
+        "zone": rec.get("zone_name", ""),
+        "old_ip": old_ip or "",
+        "new_ip": new_ip,
+        "status": status,
+        "timestamp": timestamp,
+        "error": error,
+    }
+
+
+def _csv(values) -> str:
+    unique = []
+    for value in values:
+        if value and value not in unique:
+            unique.append(value)
+    return ", ".join(unique)
+
+
 def run_sync() -> dict:
     started = _now()
     t0 = time.time()
@@ -82,6 +104,11 @@ def run_sync() -> dict:
                          details={"ip": public_ip})
 
     checked = updated = failed = 0
+    checked_records = []
+    updated_records = []
+    unchanged_records = []
+    failed_records = []
+    previous_public_ip = state.get("last_public_ip")
     for rec in cfg.get("records", []):
         if not rec.get("enabled", True):
             rec["status"] = "paused"
@@ -91,11 +118,15 @@ def run_sync() -> dict:
         rec["last_checked_at"] = _now()
 
         current = rec.get("cloudflare_value")
+        checked_records.append(_record_ctx(rec, current, public_ip, "checked",
+                                           rec["last_checked_at"]))
         log_store.append("INFO", "RECORD_CHECKED", f"Checked {rec['fqdn']}",
                          record=rec["fqdn"], details={"current": current, "target": public_ip})
 
         if current == public_ip:
             rec["status"] = "synced"
+            unchanged_records.append(_record_ctx(rec, current, public_ip, "synced",
+                                                 rec["last_checked_at"]))
             log_store.append("INFO", "RECORD_UNCHANGED", f"{rec['fqdn']} unchanged",
                              record=rec["fqdn"])
             continue
@@ -110,21 +141,24 @@ def run_sync() -> dict:
             log_store.append("INFO", "RECORD_UPDATED",
                              f"{rec['type']} {old or '?'} → {public_ip}",
                              record=rec["fqdn"], details={"old_ip": old, "new_ip": public_ip})
+            rec_ctx = _record_ctx(rec, old, public_ip, "updated", rec["last_updated_at"])
+            updated_records.append(rec_ctx)
             integration_engine.dispatch("RECORD_UPDATED", {
-                "message": f"{rec['fqdn']} updated to {public_ip}", "status": "updated",
-                "old_ip": old, "new_ip": public_ip, "record_name": rec["fqdn"],
-                "record_type": rec["type"], "zone": rec.get("zone_name", ""),
-                "timestamp": rec["last_updated_at"]})
+                "message": f"{rec['fqdn']} updated to {public_ip}", **rec_ctx})
         else:
             rec["status"] = "failed"
             failed += 1
+            failed_at = _now()
+            err = result.get("error", "")
+            failed_records.append(_record_ctx(rec, current, public_ip, "failed",
+                                              failed_at, err))
             log_store.append("ERROR", "RECORD_UPDATE_FAILED", f"{rec['fqdn']} update failed",
-                             record=rec["fqdn"], details={"error": result.get("error")})
+                             record=rec["fqdn"], details={"error": err})
             integration_engine.dispatch("RECORD_UPDATE_FAILED", {
                 "message": f"{rec['fqdn']} update failed", "status": "failed",
                 "record_name": rec["fqdn"], "record_type": rec["type"],
-                "zone": rec.get("zone_name", ""), "error": result.get("error", ""),
-                "timestamp": _now()})
+                "zone": rec.get("zone_name", ""), "error": err,
+                "old_ip": current or "", "new_ip": public_ip, "timestamp": failed_at})
 
     config_store.save(cfg)
 
@@ -140,8 +174,22 @@ def run_sync() -> dict:
     msg = f"{updated} updated, {checked - updated - failed} unchanged, {failed} failed"
     log_store.append("INFO" if failed == 0 else "WARN", "SYNC_COMPLETE",
                      msg, details={"duration_ms": duration_ms})
+    primary_records = updated_records or failed_records or unchanged_records or checked_records
     integration_engine.dispatch("SYNC_COMPLETE", {
         "message": msg, "status": status, "new_ip": public_ip,
+        "old_ip": previous_public_ip or "",
+        "previous_ip": previous_public_ip or "",
+        "record_name": _csv(r["record_name"] for r in primary_records),
+        "record_type": _csv(r["record_type"] for r in primary_records),
+        "zone": _csv(r["zone"] for r in primary_records),
+        "records_checked": checked,
+        "records_updated": updated,
+        "records_unchanged": checked - updated - failed,
+        "records_failed": failed,
+        "records": primary_records,
+        "updated_records": updated_records,
+        "unchanged_records": unchanged_records,
+        "failed_records": failed_records,
         "timestamp": completed, "duration_ms": duration_ms})
 
     return {"status": status, "started_at": started, "completed_at": completed,

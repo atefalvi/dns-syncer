@@ -7,7 +7,7 @@
 A lightweight, self-hosted Cloudflare DNS updater with a local web UI —
 built to run quietly on a Raspberry Pi alongside your other home-lab services.
 
-![Version](https://img.shields.io/badge/version-0.2.1-FF5C38)
+![Version](https://img.shields.io/badge/version-0.2.2-FF5C38)
 ![Python](https://img.shields.io/badge/python-3.11%2B-3ECF8E)
 ![License](https://img.shields.io/badge/license-MIT-5CA7FF)
 ![Platform](https://img.shields.io/badge/platform-Raspberry%20Pi%20%7C%20Debian-A8B1BD)
@@ -137,8 +137,15 @@ endpoint. Presets for **Discord**, **Slack**, and **Microsoft Teams**, or build
 a generic webhook with custom method, headers, and a JSON body template:
 
 ```json
-{ "content": "**DNS Syncer**\n{{message}}\n`{{old_ip}} → {{new_ip}}`" }
+{ "content": "**DNS Syncer**\n{{message}}\nCurrent IP: `{{new_ip}}`" }
 ```
+
+`SYNC_COMPLETE` is a whole-run event, so record variables such as
+`{{record_name}}`, `{{zone}}`, and `{{record_type}}` are comma-separated
+summaries of the records involved. For one notification per changed record,
+subscribe to `RECORD_UPDATED`; that event includes the specific `{{old_ip}}`
+and `{{new_ip}}` for that DNS record. Unknown template variables render as empty
+strings.
 
 Every integration has a **Test** button.
 

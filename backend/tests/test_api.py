@@ -50,3 +50,14 @@ def test_integration_crud_and_secret_hidden(monkeypatch):
 def test_render_template():
     out = integration_engine.render({"content": "{{message}}!"}, {"message": "hi"})
     assert out == {"content": "hi!"}
+
+
+def test_render_template_unknown_tokens_do_not_leak():
+    out = integration_engine.render(
+        {"content": "{{message}} {{missing}}", "exact": "{{records}}"},
+        {"message": "hi", "records": [{"record_name": "home.example.com"}]},
+    )
+    assert out == {
+        "content": "hi ",
+        "exact": [{"record_name": "home.example.com"}],
+    }
