@@ -8,4 +8,4 @@ Type=oneshot
 User=dns-syncer
 Group=dns-syncer
 WorkingDirectory=/opt/dns-syncer
-ExecStart=/opt/dns-syncer/.venv/bin/python -m app.cli sync-once
+ExecStart=/opt/dns-syncer/.venv/bin/python -m app.cli sync-due

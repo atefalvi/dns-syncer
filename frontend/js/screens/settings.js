@@ -35,11 +35,10 @@ export async function render(view) {
         <div class="field"><label>Sync Interval</label>
           <select id="interval">${[5, 15, 30, 60].map(n =>
             `<option value="${n}" ${s.sync_interval_minutes === n ? "selected" : ""}>${n} minutes</option>`).join("")}</select></div>
-        <div class="field"><label>Run on startup</label>
-          <select id="startup"><option value="true" ${s.run_on_startup ? "selected" : ""}>Yes</option>
-            <option value="false" ${!s.run_on_startup ? "selected" : ""}>No</option></select></div>
+        <div class="field"><label>Automatic Sync</label>
+          <input type="text" value="Enabled with catch-up" disabled></div>
       </div>
-      <div class="hint">Interval changes take effect after: <span class="mono">sudo systemctl restart dns-syncer.timer</span></div>`)}
+      <div class="hint">Interval changes apply automatically. The scheduler checks once per minute and runs only when due.</div>`)}
 
     ${section("Public IP Source", `
       <div class="row">
@@ -137,7 +136,6 @@ export async function render(view) {
     const zoneVal = view.querySelector("#zone").value.split("|");
     const payload = {
       sync_interval_minutes: +view.querySelector("#interval").value,
-      run_on_startup: view.querySelector("#startup").value === "true",
       ip_provider: view.querySelector("#ipname").value.trim(),
       ip_provider_url: view.querySelector("#ipurl").value.trim(),
       max_log_entries: +view.querySelector("#maxlog").value,

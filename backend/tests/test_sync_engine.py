@@ -58,6 +58,43 @@ def test_update_success(monkeypatch):
     assert config_store.load()["records"][0]["cloudflare_value"] == "203.0.113.42"
 
 
+def test_sync_due_skips_before_interval(monkeypatch):
+    _add_record("203.0.113.42")
+    cfg = config_store.load()
+    cfg["sync_interval_minutes"] = 30
+    config_store.save(cfg)
+    sync_engine.run_sync()
+
+    called = []
+    monkeypatch.setattr(sync_engine.cf, "update_record", lambda *a, **k: called.append(1))
+    res = sync_engine.run_sync_if_due()
+
+    assert res["status"] == "skipped"
+    assert res["ran"] is False
+    assert res["due"] is False
+    assert called == []
+
+
+def test_sync_due_runs_after_interval(monkeypatch):
+    _add_record("198.51.100.17")
+    cfg = config_store.load()
+    cfg["sync_interval_minutes"] = 5
+    config_store.save(cfg)
+    sync_engine.write_state({
+        "last_public_ip": "198.51.100.17",
+        "last_sync_at": "2026-01-01T00:00:00Z",
+        "last_successful_sync_at": "2026-01-01T00:00:00Z",
+        "last_error": None,
+    })
+    monkeypatch.setattr(sync_engine.cf, "update_record", lambda *a, **k: {"id": "r1"})
+
+    res = sync_engine.run_sync_if_due()
+
+    assert res["status"] == "success"
+    assert res["ran"] is True
+    assert res["records_updated"] == 1
+
+
 def test_retry_then_fail(monkeypatch):
     _add_record("198.51.100.17")
     attempts = []

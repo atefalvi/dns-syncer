@@ -12,6 +12,12 @@ def sync_once() -> int:
     return 0 if result["status"] in ("success", "partial") else 1
 
 
+def sync_due() -> int:
+    result = sync_engine.run_sync_if_due(source="systemd-timer")
+    print(json.dumps(result, indent=2))
+    return 0 if result["status"] in ("success", "partial", "skipped") else 1
+
+
 def verify_token() -> int:
     result = cf.verify_token()
     print(json.dumps(result, indent=2))
@@ -35,11 +41,13 @@ def main(argv=None) -> int:
     cmd = argv[0] if argv else ""
     if cmd == "sync-once":
         return sync_once()
+    if cmd == "sync-due":
+        return sync_due()
     if cmd == "verify-token":
         return verify_token()
     if cmd == "print-status":
         return print_status()
-    print("usage: python -m app.cli {sync-once|verify-token|print-status}")
+    print("usage: python -m app.cli {sync-once|sync-due|verify-token|print-status}")
     return 2
 
 

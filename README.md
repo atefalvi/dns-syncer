@@ -7,7 +7,7 @@
 A lightweight, self-hosted Cloudflare DNS updater with a local web UI —
 built to run quietly on a Raspberry Pi alongside your other home-lab services.
 
-![Version](https://img.shields.io/badge/version-0.2.2-FF5C38)
+![Version](https://img.shields.io/badge/version-0.2.3-FF5C38)
 ![Python](https://img.shields.io/badge/python-3.11%2B-3ECF8E)
 ![License](https://img.shields.io/badge/license-MIT-5CA7FF)
 ![Platform](https://img.shields.io/badge/platform-Raspberry%20Pi%20%7C%20Debian-A8B1BD)
@@ -45,15 +45,16 @@ DNS Syncer fixes that:
 4. Logs everything locally and can notify any webhook.
 
 **Design goals:** one small Python process serves the API and static UI; a
-`systemd` timer runs the sync. No background loop, no database, no Docker,
-no Node.js in production. Idle CPU near 0%, memory well under 100 MB.
+`systemd` timer performs due checks, with an in-app scheduler fallback. No
+database, no Docker, no Node.js in production. Idle CPU near 0%, memory well
+under 100 MB.
 
 ## Features
 
 | | |
 |---|---|
 | 🖥️ **Local web UI** | Dark, compact control panel at `http://<pi>:5055` — Overview, Records, Logs, Integrations, Settings |
-| 🔄 **Auto sync** | `systemd` timer checks every 30 min (configurable: 5/15/30/60) with catch-up after downtime |
+| 🔄 **Auto sync** | Config-driven checks every 5/15/30/60 min, guarded by both `systemd` and an app fallback scheduler |
 | 🔁 **Smart retries** | Transient failures (timeouts, 429, 5xx) retried 3× ; terminal errors (bad token) fail fast |
 | 🔐 **Encrypted secrets** | Cloudflare token and webhook URLs encrypted at rest, never logged, never sent to the browser |
 | 📜 **Full log history** | Searchable, filterable, exportable (CSV), capped at 1000 entries |
@@ -115,14 +116,20 @@ service restarts. Your config, token, records, and logs are preserved.
 
 ## Scheduled sync
 
-Sync runs as a short-lived `systemd` oneshot — the app itself never polls.
+Sync runs automatically when the configured interval is due. The `systemd`
+timer wakes once per minute and calls `sync-due`; DNS Syncer only performs a DNS
+check when the saved interval has elapsed. The web app also runs the same due
+checker as a fallback, so automatic syncs keep working even if the timer is
+disabled while the app service is still running.
 
 ```bash
-systemctl list-timers dns-syncer.timer     # next run
-journalctl -u dns-syncer-sync.service -n 20  # last sync output
+systemctl list-timers dns-syncer.timer          # timer wakeups
+journalctl -u dns-syncer-sync.service -n 50     # scheduled due checks
+sudo -u dns-syncer /opt/dns-syncer/.venv/bin/python -m app.cli sync-due
 ```
 
-After changing the interval in Settings: `sudo systemctl restart dns-syncer.timer`.
+Changing the interval in Settings takes effect automatically; no timer restart
+is required.
 
 ## Logs
 
@@ -194,7 +201,7 @@ cd backend
 python -m venv .venv && source .venv/bin/activate
 pip install -e ".[dev]"
 DNS_SYNCER_DEV=1 uvicorn app.main:app --reload --port 5055   # http://localhost:5055
-pytest                                                        # 17 tests
+pytest                                                        # 21 tests
 ```
 
 Dev mode stores everything under `backend/.local/` — no root, no systemd needed.

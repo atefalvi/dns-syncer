@@ -39,6 +39,7 @@ def health():
 def status():
     cfg = config_store.load()
     state = sync_engine.read_state()
+    schedule = sync_engine.schedule_status()
     records = cfg.get("records", [])
     ok = sum(1 for r in records if r.get("status") in ("synced", "updated"))
     token_status = "valid" if secret_store.get_token() else "missing"
@@ -51,7 +52,10 @@ def status():
         "app_status": app_status,
         "current_ip": state.get("last_public_ip"),
         "last_sync_at": state.get("last_sync_at"),
-        "next_sync_hint": f"{cfg.get('sync_interval_minutes', 30)} minutes",
+        "next_sync_at": schedule.get("next_sync_at"),
+        "sync_due": schedule.get("due"),
+        "sync_interval_minutes": schedule.get("interval_minutes"),
+        "next_sync_hint": f"{schedule.get('interval_minutes', 30)} minutes",
         "records_total": len(records),
         "records_ok": ok,
         "token_status": token_status,

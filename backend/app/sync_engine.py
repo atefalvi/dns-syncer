@@ -1,8 +1,10 @@
 """The sync cycle: detect IP, compare each record against Cloudflare, update on
 change with bounded retries, log every step, fire integrations."""
+from contextlib import contextmanager
+from datetime import datetime, timedelta, timezone
+import fcntl
 import json
 import time
-from datetime import datetime, timezone
 
 from app import cloudflare_client as cf
 from app import config_store, integration_engine, ip_provider, log_store, paths
@@ -28,6 +30,19 @@ def write_state(state: dict) -> None:
 
 def _now() -> str:
     return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+
+def _format_ts(dt: datetime) -> str:
+    return dt.astimezone(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+
+def _parse_ts(value: str | None) -> datetime | None:
+    if not value:
+        return None
+    try:
+        return datetime.strptime(value, "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=timezone.utc)
+    except ValueError:
+        return None
 
 
 def _retry_config():
@@ -74,7 +89,77 @@ def _csv(values) -> str:
     return ", ".join(unique)
 
 
+def schedule_status(now: datetime | None = None) -> dict:
+    """Return whether a scheduled sync is due based on app config and state."""
+    cfg = config_store.load()
+    state = read_state()
+    interval = max(int(cfg.get("sync_interval_minutes") or 30), 1)
+    now = now or datetime.now(timezone.utc)
+    last_sync = _parse_ts(state.get("last_sync_at"))
+    if not last_sync:
+        return {
+            "due": True,
+            "interval_minutes": interval,
+            "last_sync_at": state.get("last_sync_at"),
+            "next_sync_at": _format_ts(now),
+            "reason": "never synced",
+        }
+    next_sync = last_sync + timedelta(minutes=interval)
+    due = now >= next_sync
+    return {
+        "due": due,
+        "interval_minutes": interval,
+        "last_sync_at": state.get("last_sync_at"),
+        "next_sync_at": _format_ts(next_sync),
+        "reason": "interval elapsed" if due else "waiting for interval",
+    }
+
+
+@contextmanager
+def _sync_lock(blocking: bool = True):
+    paths.ensure_dirs()
+    lock_path = paths.STATE_DIR / "sync.lock"
+    f = lock_path.open("a+")
+    try:
+        flags = fcntl.LOCK_EX if blocking else fcntl.LOCK_EX | fcntl.LOCK_NB
+        try:
+            fcntl.flock(f.fileno(), flags)
+        except BlockingIOError:
+            f.close()
+            yield None
+            return
+        yield f
+    finally:
+        if not f.closed:
+            fcntl.flock(f.fileno(), fcntl.LOCK_UN)
+            f.close()
+
+
+def run_sync_if_due(source: str = "timer") -> dict:
+    """Run a sync only when the configured interval has elapsed."""
+    with _sync_lock(blocking=False) as lock:
+        if lock is None:
+            return {"status": "skipped", "reason": "sync already running",
+                    "source": source, "ran": False}
+        config_store.reset_cache()
+        status = schedule_status()
+        if not status["due"]:
+            return {"status": "skipped", "source": source, "ran": False, **status}
+        log_store.append("INFO", "SYNC_DUE",
+                         f"Scheduled sync due via {source}",
+                         details={"source": source, "interval_minutes": status["interval_minutes"]})
+        result = _run_sync_unlocked()
+        result.update({"source": source, "ran": True})
+        return result
+
+
 def run_sync() -> dict:
+    """Run a sync immediately, blocking if another sync is already in progress."""
+    with _sync_lock(blocking=True):
+        return _run_sync_unlocked()
+
+
+def _run_sync_unlocked() -> dict:
     started = _now()
     t0 = time.time()
     log_store.append("INFO", "SYNC_START", "Sync started")

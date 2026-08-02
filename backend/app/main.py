@@ -1,18 +1,26 @@
 """FastAPI app: mounts the API router and serves the static frontend."""
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
-from app import VERSION, log_store, paths
+from app import VERSION, log_store, paths, scheduler
 from app.api import router
 
-app = FastAPI(title="DNS Syncer", version=VERSION)
-app.include_router(router)
 
-
-@app.on_event("startup")
-def _on_startup():
+@asynccontextmanager
+async def lifespan(_app: FastAPI):
     log_store.append("INFO", "SERVICE_STARTED", "Service started")
+    scheduler.start()
+    try:
+        yield
+    finally:
+        scheduler.stop()
+
+
+app = FastAPI(title="DNS Syncer", version=VERSION, lifespan=lifespan)
+app.include_router(router)
 
 
 @app.get("/")

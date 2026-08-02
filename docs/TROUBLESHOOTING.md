@@ -15,16 +15,17 @@ journalctl -u dns-syncer-sync.service -n 50   # scheduled sync
 | **Record not found** | The hostname doesn't exist in Cloudflare. DNS Syncer creates missing A/AAAA records automatically if the token allows it; otherwise create it in Cloudflare first. Use `@` for the zone root. |
 | **IP provider timeout** | No internet or the provider is down. Default is `https://api.ipify.org` (8s timeout). Try another provider URL in Settings → Public IP Source. |
 | **Cloudflare rate limit (429)** | Transient. Sync retries automatically (3 attempts). If persistent, increase the sync interval. |
-| **Timer not running** | `systemctl status dns-syncer.timer`. Enable with `sudo systemctl enable --now dns-syncer.timer`. Check `systemctl list-timers dns-syncer.timer`. |
+| **Automatic sync not running** | Check the app first: `systemctl status dns-syncer.service`. The app has a fallback scheduler. Then check the timer: `systemctl status dns-syncer.timer` and `journalctl -u dns-syncer-sync.service -n 50`. Enable the timer with `sudo systemctl enable --now dns-syncer.timer`. |
 | **UI not reachable** | `systemctl status dns-syncer.service`. Confirm the bind host/port (Settings → Local App). If bound to `127.0.0.1` it's only reachable from the Pi itself. Check a firewall isn't blocking port 5055. |
 | **Permission denied** | Files under `/etc/dns-syncer` and `/var/log/dns-syncer` must be owned by `dns-syncer:dns-syncer`. Re-run the installer or `chown -R dns-syncer:dns-syncer` those paths. |
-| **Schedule change ignored** | The UI stores the interval, but the timer is defined in the unit file. After changing it, run `sudo systemctl restart dns-syncer.timer`. |
+| **Schedule change ignored** | Current releases apply interval changes automatically. If the old behavior persists, update DNS Syncer and verify `/etc/systemd/system/dns-syncer-sync.service` runs `python -m app.cli sync-due`. |
 
 ## Manual checks from the CLI
 
 ```bash
 sudo -u dns-syncer /opt/dns-syncer/.venv/bin/python -m app.cli verify-token
 sudo -u dns-syncer /opt/dns-syncer/.venv/bin/python -m app.cli sync-once
+sudo -u dns-syncer /opt/dns-syncer/.venv/bin/python -m app.cli sync-due
 sudo -u dns-syncer /opt/dns-syncer/.venv/bin/python -m app.cli print-status
 ```
 
@@ -32,4 +33,5 @@ sudo -u dns-syncer /opt/dns-syncer/.venv/bin/python -m app.cli print-status
 
 Both units are enabled for boot: `dns-syncer.service` (`multi-user.target`) and
 `dns-syncer.timer` (`timers.target`). After a reboot the web app comes back up
-and the timer resumes; `Persistent=true` runs a catch-up sync if one was missed.
+and the timer resumes; `Persistent=true` runs a catch-up due check if one was
+missed. The app service also starts a fallback scheduler after startup.

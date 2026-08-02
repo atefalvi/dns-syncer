@@ -6,13 +6,10 @@
 4. Go to **Records → Add Record**, enter a hostname (e.g. `home`), and save.
 5. Click **Run Sync**. Check **Logs** to confirm the update.
 
-Scheduled syncs run every 30 minutes via `dns-syncer.timer`.
+Scheduled syncs run automatically based on **Settings → Sync Behavior**. The
+systemd timer wakes DNS Syncer once per minute, and DNS Syncer only performs a
+DNS check when the configured interval is due. The web service also has a
+fallback due checker, so automatic syncs continue if the timer is missed while
+the app is running.
 
-Change the interval in **Settings → Sync Behavior**, then apply it with:
-
-```bash
-sudo systemctl restart dns-syncer.timer
-```
-
-(The timer interval is defined in `/etc/systemd/system/dns-syncer.timer`; edit
-`OnUnitActiveSec` there if you need a value other than the four UI presets.)
+Interval changes apply automatically; no `systemctl restart` is required.

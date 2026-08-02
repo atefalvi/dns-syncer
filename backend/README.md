@@ -1,7 +1,9 @@
 # DNS Syncer backend
 
 One small FastAPI app that serves the local API and the static frontend, plus a
-CLI used by the `systemd` sync timer. Storage is plain files — no database.
+CLI used by the `systemd` sync timer. Storage is plain files — no database. The
+sync scheduler is due-based, so both the timer and the app fallback can ask for
+syncs without causing duplicate DNS updates.
 
 ## Layout
 
@@ -15,11 +17,12 @@ CLI used by the `systemd` sync timer. Storage is plain files — no database.
 | `log_store.py` | Capped JSONL event log, filter/paginate/export |
 | `ip_provider.py` | Public IP lookup |
 | `cloudflare_client.py` | Cloudflare API wrapper with retryable errors |
-| `sync_engine.py` | Sync cycle + retry + state file |
+| `sync_engine.py` | Sync cycle + due checks + retry + state file |
+| `scheduler.py` | In-app automatic sync fallback |
 | `integration_engine.py` | Outbound webhooks with `{{template}}` rendering |
 | `api.py` | Routes under `/api` |
 | `main.py` | App + static mount |
-| `cli.py` | `sync-once`, `verify-token`, `print-status` |
+| `cli.py` | `sync-once`, `sync-due`, `verify-token`, `print-status` |
 
 ## Run
 

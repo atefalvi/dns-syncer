@@ -41,8 +41,8 @@ export async function render(view) {
     return `<div class="grid grid-4" style="margin-bottom:var(--space-4)">
       ${stat("Current IP", s.current_ip || "—", "Auto-detected")}
       ${stat("Last Sync", s.last_sync_at ? relTime(s.last_sync_at) : "Never", fmtDateTime(s.last_sync_at))}
+      ${stat("Next Sync", s.sync_due ? "Due now" : relTime(s.next_sync_at), fmtDateTime(s.next_sync_at))}
       ${stat("Records", records.length, `${okCount} OK`)}
-      ${stat("Token", s.token_masked || "Not set", tokenBadge(s.token_status))}
     </div>`;
   }
 
@@ -94,6 +94,7 @@ export async function render(view) {
         s.token_status === "missing" ? ["No token", "warning"] : ["Set", "info"]],
       ["Public IP Provider", s.current_ip ? ["Available", "success"] : ["Unknown", "warning"]],
       ["Systemd Timer", s.timer_status === "active" ? ["Active", "success"] : [s.timer_status, "warning"]],
+      ["Auto Scheduler", s.sync_interval_minutes ? [`Every ${s.sync_interval_minutes} min`, "success"] : ["Unknown", "warning"]],
       ["Log Writer", ["Ready", "success"]],
     ];
     return rows.map(([k, [v, kind]]) => `<div class="hrow">

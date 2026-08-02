@@ -16,6 +16,8 @@ The installer creates the `dns-syncer` service user, installs the app to
 the service and timer. When it finishes it prints the local URL.
 
 Everything else — token, zone, records, webhooks — is configured in the web UI.
+The sync interval in Settings is applied automatically; the timer wakes once per
+minute and DNS Syncer runs only when the configured interval is due.
 
 ## Manual install
 
@@ -57,6 +59,8 @@ sudo /opt/dns-syncer/update.sh
 Both download the latest GitHub release, reinstall, and restart the service.
 Config, secrets, state, and logs are preserved (the installer never touches
 `/etc/dns-syncer`, `/var/lib/dns-syncer`, or `/var/log/dns-syncer` contents).
+The installer also reloads and restarts the timer so scheduler unit changes take
+effect immediately.
 
 ## Uninstall
 

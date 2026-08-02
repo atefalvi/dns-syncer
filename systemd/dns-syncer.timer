@@ -3,7 +3,8 @@ Description=Run DNS Syncer on schedule
 
 [Timer]
 OnBootSec=2min
-OnUnitActiveSec=30min
+OnUnitActiveSec=1min
+AccuracySec=30s
 Unit=dns-syncer-sync.service
 Persistent=true
 

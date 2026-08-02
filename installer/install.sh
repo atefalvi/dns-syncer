@@ -63,7 +63,9 @@ cp "$SRC/systemd/"*.service "$SRC/systemd/"*.timer /etc/systemd/system/
 systemctl daemon-reload
 systemctl enable --now $APP.service >/dev/null
 systemctl restart $APP.service
+systemctl reset-failed $APP-sync.service 2>/dev/null || true
 systemctl enable --now $APP.timer >/dev/null
+systemctl restart $APP.timer
 echo "✓ Started service"
 echo "✓ Started timer"
 
