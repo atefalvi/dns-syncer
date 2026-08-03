@@ -23,6 +23,15 @@ app = FastAPI(title="DNS Syncer", version=VERSION, lifespan=lifespan)
 app.include_router(router)
 
 
+@app.middleware("http")
+async def no_cache_frontend_assets(request, call_next):
+    response = await call_next(request)
+    path = request.url.path
+    if path == "/" or path.startswith(("/js/", "/styles/", "/assets/")):
+        response.headers["Cache-Control"] = "no-cache"
+    return response
+
+
 @app.get("/")
 def index():
     return FileResponse(paths.FRONTEND_DIR / "index.html",

@@ -17,6 +17,24 @@ const SCREENS = {
 const view = document.getElementById("view");
 let refreshTimer = null;
 
+if (window.matchMedia("(pointer: fine)").matches) {
+  let pointerFrame = null;
+  let latestPointer = null;
+
+  document.addEventListener("pointermove", (event) => {
+    latestPointer = event;
+    if (pointerFrame) return;
+    pointerFrame = requestAnimationFrame(() => {
+      document.querySelectorAll(".spotlight").forEach((el) => {
+        const rect = el.getBoundingClientRect();
+        el.style.setProperty("--spot-x", `${latestPointer.clientX - rect.left}px`);
+        el.style.setProperty("--spot-y", `${latestPointer.clientY - rect.top}px`);
+      });
+      pointerFrame = null;
+    });
+  });
+}
+
 // Build sidebar nav.
 document.getElementById("nav").innerHTML = Object.entries(SCREENS).map(([id, s]) =>
   `<a href="#${id}" data-screen="${id}">${icons[id]}<span>${s.label}</span></a>`).join("");
@@ -48,15 +66,32 @@ async function refreshHealth() {
   } catch (_) { el.className = "pill danger"; el.textContent = "Offline"; }
 }
 
-document.getElementById("btn-sync").addEventListener("click", async (e) => {
-  e.target.disabled = true; e.target.textContent = "Syncing…";
-  try { const r = await api.post("/sync/run");
+function syncButtons() {
+  return [...document.querySelectorAll(".js-run-sync")];
+}
+
+function setSyncing(isSyncing) {
+  syncButtons().forEach((btn) => {
+    btn.disabled = isSyncing;
+    btn.textContent = isSyncing ? "Syncing..." : "Run Sync";
+  });
+}
+
+async function runManualSync() {
+  setSyncing(true);
+  try {
+    const r = await api.post("/sync/run");
     toast(`Sync done: ${r.records_updated} updated, ${r.records_failed} failed`,
-      r.records_failed ? "error" : "success"); }
-  catch (err) { toast(err.message, "error"); }
-  e.target.disabled = false; e.target.textContent = "Run Sync";
-  refreshHealth(); route();
-});
+      r.records_failed ? "error" : "success");
+  } catch (err) {
+    toast(err.message, "error");
+  }
+  setSyncing(false);
+  refreshHealth();
+  route();
+}
+
+syncButtons().forEach((btn) => btn.addEventListener("click", runManualSync));
 
 document.getElementById("btn-verify").addEventListener("click", async (e) => {
   e.target.disabled = true;

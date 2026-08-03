@@ -4,10 +4,10 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>DNS Syncer — by DataDreamer</title>
-  <link rel="icon" type="image/png" href="/assets/favicon.png">
-  <link rel="stylesheet" href="/styles/tokens.css?v=0.2.7">
-  <link rel="stylesheet" href="/styles/base.css?v=0.2.7">
-  <link rel="stylesheet" href="/styles/app.css?v=0.2.7">
+  <link rel="icon" type="image/png" href="/assets/favicon.png?v=0.2.8">
+  <link rel="stylesheet" href="/styles/tokens.css?v=0.2.8">
+  <link rel="stylesheet" href="/styles/base.css?v=0.2.8">
+  <link rel="stylesheet" href="/styles/app.css?v=0.2.8">
 </head>
 <body>
   <div class="app">
@@ -20,7 +20,8 @@
         </div>
       </div>
       <nav class="nav" id="nav"></nav>
-      <div class="sidebar-foot">DNS Syncer<br>v0.2.7</div>
+      <button class="mobile-sync js-run-sync" type="button" aria-label="Run DNS sync now">Run Sync</button>
+      <div class="sidebar-foot">DNS Syncer<br>v0.2.8</div>
     </aside>
 
     <main class="main">
@@ -31,13 +32,13 @@
         </div>
         <div class="actions">
           <button class="btn btn-secondary" id="btn-verify">Verify Token</button>
-          <button class="btn btn-primary" id="btn-sync">Run Sync</button>
+          <button class="btn btn-primary js-run-sync" id="btn-sync">Run Sync</button>
         </div>
       </header>
       <section class="view" id="view"></section>
     </main>
   </div>
 
-  <script type="module" src="/js/app.js?v=0.2.7"></script>
+  <script type="module" src="/js/app.js?v=0.2.8"></script>
 </body>
 </html>

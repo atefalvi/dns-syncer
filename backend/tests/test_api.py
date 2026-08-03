@@ -12,6 +12,12 @@ def test_health():
     assert r.json()["status"] == "ok"
 
 
+def test_frontend_assets_are_not_cached():
+    r = client.get("/js/app.js")
+    assert r.status_code == 200
+    assert r.headers["cache-control"] == "no-cache"
+
+
 def test_status_setup_state():
     r = client.get("/api/status")
     assert r.status_code == 200

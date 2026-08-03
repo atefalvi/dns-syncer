@@ -20,25 +20,9 @@ export async function render(view) {
       api.get("/logs?page_size=5"),
     ]);
     view.querySelector("#ov").innerHTML =
-      setupBanner(status) + cards(status, records) + panels(status, logs, records);
-    const go = view.querySelector("#go-settings");
-    if (go) go.addEventListener("click", () => { location.hash = "#settings"; });
-  }
-
-  function setupBanner(s) {
-    if (s.token_status !== "missing") return "";
-    return `<div class="card banner">
-      <div>
-        <div class="card-title card-title-tight">Get started</div>
-        <div class="setup-steps">
-          <span>1. Add your Cloudflare token</span>
-          <span>2. Verify &amp; pick a zone</span>
-          <span>3. Add a record</span>
-          <span>4. Run Sync</span>
-        </div>
-      </div>
-      <button class="btn btn-primary" id="go-settings">Open Settings</button>
-    </div>`;
+      commandPanel(status, records) + cards(status, records) + panels(status, logs, records);
+    view.querySelectorAll("[data-go]").forEach(btn =>
+      btn.addEventListener("click", () => { location.hash = `#${btn.dataset.go}`; }));
   }
 
   function cards(s, records) {
@@ -48,6 +32,24 @@ export async function render(view) {
       ${stat("Last Sync", s.last_sync_at ? relTime(s.last_sync_at) : "Never", fmtDateTime(s.last_sync_at))}
       ${stat("Next Sync", nextSyncValue(s), nextSyncMeta(s))}
       ${stat("Records", records.length, `${okCount} OK`)}
+    </div>`;
+  }
+
+  function commandPanel(s, records) {
+    const [headline, tone] = statusHeadline(s);
+    const enabled = records.filter(r => r.enabled !== false).length;
+    return `<div class="command-panel spotlight ${tone}">
+      <div class="command-copy">
+        <div class="command-label"><span class="signal-dot ${tone}"></span>${esc(EVENT_LABEL(s.app_status || "system ready"))}</div>
+        <h3>${esc(headline)}</h3>
+        <p>${esc(commandMessage(s, records))}</p>
+        ${commandAction(s, records)}
+      </div>
+      <div class="command-facts">
+        ${fact("Automatic check", s.sync_interval_minutes ? `Every ${s.sync_interval_minutes} min` : "Unknown")}
+        ${fact("Next run", s.sync_due ? "Due now" : relTime(s.next_sync_at))}
+        ${fact("Enabled records", `${enabled} / ${records.length}`)}
+      </div>
     </div>`;
   }
 
@@ -111,6 +113,30 @@ export async function render(view) {
   }
 }
 
+function statusHeadline(s) {
+  if (s.app_status === "healthy") return ["DNS Syncer is watching your records", "success"];
+  if (s.app_status === "degraded") return ["DNS Syncer needs attention", "warning"];
+  return ["Finish setup to start automatic syncing", "warning"];
+}
+
+function commandMessage(s, records) {
+  if (s.token_status === "missing") return "Add your Cloudflare token, choose a zone, then run a manual sync once.";
+  if (!records.length) return "Add at least one DNS record so automatic checks have something to protect.";
+  if (s.sync_due) return "The next automatic run is due now. Manual sync is available from the command bar.";
+  if (s.next_sync_at) return `Next automatic check: ${fmtDateTime(s.next_sync_at)}.`;
+  return "Automatic checks are enabled; waiting for the first scheduled run.";
+}
+
+function commandAction(s, records) {
+  if (s.token_status === "missing") {
+    return `<button class="btn btn-primary command-action" data-go="settings">Open Settings</button>`;
+  }
+  if (!records.length) {
+    return `<button class="btn btn-secondary command-action" data-go="records">Add a Record</button>`;
+  }
+  return `<button class="btn btn-secondary command-action" data-go="logs">View Logs</button>`;
+}
+
 function nextSyncValue(s) {
   if (s.sync_due) return "Due now";
   return relTime(s.next_sync_at);
@@ -122,17 +148,18 @@ function nextSyncMeta(s) {
 }
 
 function stat(label, value, meta) {
-  return `<div class="card stat">
+  return `<div class="card stat spotlight">
     <div class="label">${esc(label)}</div>
     <div class="value">${esc(value)}</div>
     <div class="meta">${meta}</div>
   </div>`;
 }
 
-function tokenBadge(status) {
-  const map = { valid: ["Valid", "success"], missing: ["Not set", "warning"], set: ["Set", "info"] };
-  const [t, k] = map[status] || ["Unknown", "warning"];
-  return `<span class="pill ${k}">${t}</span>`;
+function fact(label, value) {
+  return `<div class="command-fact">
+    <span>${esc(label)}</span>
+    <strong>${esc(value)}</strong>
+  </div>`;
 }
 
 export function statusPill(status) {
