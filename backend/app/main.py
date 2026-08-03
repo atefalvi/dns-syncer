@@ -25,7 +25,8 @@ app.include_router(router)
 
 @app.get("/")
 def index():
-    return FileResponse(paths.FRONTEND_DIR / "index.html")
+    return FileResponse(paths.FRONTEND_DIR / "index.html",
+                        headers={"Cache-Control": "no-cache"})
 
 
 # Static assets. Mounted last so /api takes precedence.

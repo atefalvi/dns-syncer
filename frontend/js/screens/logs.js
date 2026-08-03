@@ -8,9 +8,11 @@ const FILTERS = [
 ];
 
 export async function render(view) {
-  view.innerHTML = `<div class="kicker">Operations</div>
-    <h2>Logs</h2>
-    <div class="sub">Full event history for DNS Syncer.</div>
+  view.innerHTML = `<div class="page-head">
+      <div class="kicker">Operations</div>
+      <h2>Logs</h2>
+      <div class="sub">Full event history for DNS Syncer.</div>
+    </div>
     <div class="toolbar">
       <div class="chips" id="chips">${FILTERS.map(([id, l]) =>
         `<button class="chip ${id === "all" ? "active" : ""}" data-f="${id}">${l}</button>`).join("")}</div>
@@ -20,7 +22,7 @@ export async function render(view) {
       <a class="btn btn-secondary" href="/api/logs/export">Export CSV</a>
     </div>
     <div class="cols">
-      <div class="card" style="padding:0"><div id="tbl"></div></div>
+      <div class="card table-card"><div id="tbl"></div></div>
       <div class="card"><div class="card-title">Log Summary</div><div id="summary"></div></div>
     </div>`;
 
@@ -52,7 +54,7 @@ export async function render(view) {
       tbl.innerHTML = `<div class="table-wrap"><table>
         <thead><tr><th>Time</th><th>Level</th><th>Event</th><th>Message</th><th>Record</th><th></th></tr></thead>
         <tbody>${entries.map((e, i) => `<tr>
-          <td class="mono" style="white-space:nowrap" title="${esc(fmtDateTime(e.timestamp))}">${fmtShort(e.timestamp)}</td>
+          <td class="mono nowrap" title="${esc(fmtDateTime(e.timestamp))}">${fmtShort(e.timestamp)}</td>
           <td><span class="dot ${esc(e.level)}"></span> ${esc(e.level)}</td>
           <td class="mono trunc" title="${esc(e.event)}">${esc(e.event)}</td>
           <td class="trunc" title="${esc(e.message)}">${esc(e.message)}</td>
@@ -72,7 +74,7 @@ export async function render(view) {
       ["Total logs", c.total], ["Info", c.INFO], ["Debug", c.DEBUG],
       ["Warnings", c.WARN], ["Errors", c.ERROR],
     ].map(([k, v]) => `<div class="hrow"><span class="k">${k}</span><span class="mono">${v}</span></div>`).join("")
-      + `<button class="btn btn-danger btn-sm" id="clear" style="margin-top:var(--space-4)">Clear logs</button>`;
+      + `<button class="btn btn-danger btn-sm summary-action" id="clear">Clear logs</button>`;
     view.querySelector("#clear").addEventListener("click", async () => {
       if (!confirm("Clear all logs? This cannot be undone.")) return;
       await api.del("/logs"); toast("Logs cleared"); load();
@@ -82,9 +84,9 @@ export async function render(view) {
   function pager(data) {
     const pages = Math.ceil(data.total / data.page_size);
     if (pages <= 1) return "";
-    return `<div id="pager" style="display:flex;gap:8px;justify-content:center;padding:var(--space-3)">
+    return `<div id="pager" class="pager">
       ${data.page > 1 ? `<button class="btn btn-ghost btn-sm" data-page="${data.page - 1}">← Prev</button>` : ""}
-      <span class="mono" style="align-self:center;color:var(--text-3)">${data.page} / ${pages}</span>
+      <span class="mono">${data.page} / ${pages}</span>
       ${data.page < pages ? `<button class="btn btn-ghost btn-sm" data-page="${data.page + 1}">Next →</button>` : ""}
     </div>`;
   }

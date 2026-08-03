@@ -25,9 +25,11 @@ const PRESETS = {
 };
 
 export async function render(view) {
-  view.innerHTML = `<div class="kicker">Notifications</div>
-    <h2>Integrations</h2>
-    <div class="sub">Send DNS Syncer events to any API or notification platform.</div>
+  view.innerHTML = `<div class="page-head">
+      <div class="kicker">Notifications</div>
+      <h2>Integrations</h2>
+      <div class="sub">Send DNS Syncer events to any API or notification platform.</div>
+    </div>
     <div class="toolbar">
       <div class="spacer"></div>
       <button class="btn btn-secondary" data-add="webhook">+ Generic Webhook</button>
@@ -65,12 +67,12 @@ export async function render(view) {
       ? `<span class="pill success"><span class="dot success"></span>Connected</span>`
       : `<span class="pill warning">Not connected</span>`;
     return `<div class="card int-card">
-      <div style="display:flex;justify-content:space-between;align-items:start">
-        <div><div style="font-weight:600">${esc(i.name)}</div>
+      <div class="card-row-head">
+        <div><div class="name">${esc(i.name)}</div>
           <div class="desc">${esc(i.type)} · ${(i.trigger_events || []).length} event(s)</div></div>
         ${conn}
       </div>
-      <div class="desc">${eventSummary(i.trigger_events || [])}</div>
+      <div class="event-summary">${eventSummary(i.trigger_events || [])}</div>
       <div class="foot">
         <button class="btn btn-ghost btn-sm" data-edit="${esc(i.id)}">Configure</button>
         <button class="btn btn-ghost btn-sm" data-test="${esc(i.id)}">Test</button>
@@ -93,7 +95,7 @@ function editor(existing, presetType, onDone) {
     <div class="field"><label>Integration Name</label>
       <input type="text" id="name" value="${esc(existing?.name || preset.name)}"></div>
     <label class="switch"><input type="checkbox" id="enabled" ${existing?.enabled !== false ? "checked" : ""}>&nbsp;Enabled</label>
-    <div class="field" style="margin-top:var(--space-4)"><label>Trigger Events</label>
+    <div class="field field-spaced"><label>Trigger Events</label>
       <div class="hint">For change-only notifications, keep <strong>DNS record changed</strong> selected and uncheck every other event.</div>
       <div class="event-options">${TRIGGERS.map(t => `<label class="event-option">
         <input type="checkbox" value="${t.id}" ${triggers.includes(t.id) ? "checked" : ""}>
@@ -103,11 +105,11 @@ function editor(existing, presetType, onDone) {
     <div class="row">
       <div class="field"><label>Method</label><select id="method">
         ${["POST", "PUT", "PATCH"].map(x => `<option ${existing?.method === x ? "selected" : ""}>${x}</option>`).join("")}</select></div>
-      <div class="field" style="flex:3"><label>URL ${existing ? "(leave blank to keep)" : ""}</label>
+      <div class="field field-wide"><label>URL ${existing ? "(leave blank to keep)" : ""}</label>
         <input type="text" id="url" placeholder="https://…"></div>
     </div>
     <div class="field"><label>Headers (JSON)</label>
-      <textarea id="headers" style="min-height:60px">${esc(JSON.stringify(existing?.headers || {}, null, 2))}</textarea></div>
+      <textarea id="headers" class="textarea-sm">${esc(JSON.stringify(existing?.headers || {}, null, 2))}</textarea></div>
     <div class="field"><label>Body Template (JSON)</label>
       <textarea id="body">${esc(JSON.stringify(body, null, 2))}</textarea>
       <div class="hint">Variables: {{event}} {{message}} {{old_ip}} {{new_ip}} {{record_name}} {{record_type}} {{zone}} {{records_checked}} {{records_updated}} {{records_unchanged}} {{records_failed}} {{records}} {{timestamp}}</div></div>

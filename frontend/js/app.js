@@ -28,7 +28,7 @@ async function route() {
     a.classList.toggle("active", a.dataset.screen === id));
 
   clearInterval(refreshTimer);
-  view.innerHTML = `<div class="empty">Loading…</div>`;
+  view.innerHTML = `<div class="loading-state"><span>Loading…</span></div>`;
   try { await screen.mod.render(view); }
   catch (e) { view.innerHTML = `<div class="empty">Failed to load: ${e.message}</div>`; }
 

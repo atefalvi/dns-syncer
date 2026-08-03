@@ -4,16 +4,18 @@ import { toast, modal } from "../state.js";
 import { statusPill } from "./overview.js";
 
 export async function render(view) {
-  view.innerHTML = `<div class="kicker">DNS</div>
-    <h2>Records</h2>
-    <div class="sub">Manage DNS records synced by DNS Syncer.</div>
+  view.innerHTML = `<div class="page-head">
+      <div class="kicker">DNS</div>
+      <h2>Records</h2>
+      <div class="sub">Manage DNS records synced by DNS Syncer.</div>
+    </div>
     <div class="toolbar">
       <input type="text" id="search" placeholder="Search records…">
       <div class="spacer"></div>
       <button class="btn btn-secondary" id="add">Add Record</button>
       <button class="btn btn-primary" id="run">Run Sync</button>
     </div>
-    <div class="card" style="padding:0"><div id="tbl"></div></div>`;
+    <div class="card table-card"><div id="tbl"></div></div>`;
 
   let records = [];
   const load = async () => { records = await api.get("/records"); draw(); };

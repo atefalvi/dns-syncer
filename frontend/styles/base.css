@@ -6,11 +6,12 @@ html, body { height: 100%; }
 
 body {
   font-family: var(--font-text);
-  font-size: 14px;
+  font-size: var(--fs-base);
   line-height: 1.5;
   color: var(--text-1);
   background: var(--bg-0);
   -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
 }
 
 a { color: var(--accent); text-decoration: none; }
@@ -24,6 +25,11 @@ button, input, select, textarea { font: inherit; color: inherit; }
 }
 
 code, .mono, .num { font-family: var(--font-mono); }
+
+::selection {
+  background: var(--accent-subtle);
+  color: var(--text-1);
+}
 
 ::-webkit-scrollbar { width: 10px; height: 10px; }
 ::-webkit-scrollbar-thumb { background: var(--border-2); border-radius: var(--radius-full); }

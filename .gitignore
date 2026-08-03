@@ -1,20 +1,51 @@
-# Local runtime data (dev mode) — never commit secrets/logs/state
+# Local runtime data (dev mode) - never commit secrets/logs/state
 .local/
+data/
+logs/
+*.log
 *.enc
 *.key
+.env
+.env.*
+!.env.example
 
 # Python
 .venv/
+venv/
+env/
 __pycache__/
 *.pyc
+*.pyo
+.python-version
 .pytest_cache/
+.coverage
+coverage.xml
+htmlcov/
 *.egg-info/
 build/
 dist/
+
+# Frontend / package tooling
+node_modules/
+.npm/
+.pnpm-store/
+.yarn/
+*.tsbuildinfo
+
+# App/package artifacts
+*.tar.gz
+*.zip
+*.whl
+
+# Impeccable local state
+.impeccable/config.local.json
+.impeccable/critique/
+.impeccable/sessions/
 
 # Editor / OS / tooling
 .claude/
 .vscode/
 .idea/
 .DS_Store
-.env
+*.swp
+*.swo

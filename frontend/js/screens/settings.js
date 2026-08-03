@@ -7,26 +7,28 @@ export async function render(view) {
   const status = await api.get("/status");
   const adv = s.advanced || {};
 
-  view.innerHTML = `<div class="kicker">Configuration</div>
-    <h2>Settings</h2>
-    <div class="sub">Configure DNS Syncer behavior. Cloudflare token lives here.</div>
+  view.innerHTML = `<div class="page-head">
+      <div class="kicker">Configuration</div>
+      <h2>Settings</h2>
+      <div class="sub">Configure DNS Syncer behavior. Cloudflare token lives here.</div>
+    </div>
 
     ${section("Cloudflare", `
       <div class="field"><label>API Token <span id="tokbadge">${tokenBadge(status.token_status)}</span></label>
         <div class="row">
-          <input type="password" id="token" placeholder="${status.token_masked || "Paste Cloudflare API token"}" style="flex:4">
-          <button class="btn btn-secondary" id="reveal" style="flex:0 0 auto">Show</button>
+          <input type="password" id="token" class="field-grow" placeholder="${status.token_masked || "Paste Cloudflare API token"}">
+          <button class="btn btn-secondary button-fixed" id="reveal">Show</button>
         </div>
         <div class="hint">Needs Zone:Read + DNS:Edit. Stored encrypted, never shown again.</div>
       </div>
-      <div class="row" style="margin-bottom:var(--space-4)">
+      <div class="row settings-actions">
         <button class="btn btn-secondary" id="savetok">Save Token</button>
         <button class="btn btn-secondary" id="verify">Verify Token</button>
       </div>
       <div class="field"><label>Selected Zone</label>
         <div class="row">
-          <select id="zone" style="flex:4"><option>${esc(s.cloudflare_zone_name || "— refresh zones —")}</option></select>
-          <button class="btn btn-secondary" id="refresh" style="flex:0 0 auto">Refresh</button>
+          <select id="zone" class="field-grow"><option>${esc(s.cloudflare_zone_name || "— refresh zones —")}</option></select>
+          <button class="btn btn-secondary button-fixed" id="refresh">Refresh</button>
         </div>
       </div>`)}
 
@@ -43,7 +45,7 @@ export async function render(view) {
     ${section("Public IP Source", `
       <div class="row">
         <div class="field"><label>Provider</label><input type="text" id="ipname" value="${esc(s.ip_provider)}"></div>
-        <div class="field" style="flex:3"><label>Custom URL</label><input type="text" id="ipurl" value="${esc(s.ip_provider_url)}"></div>
+        <div class="field field-wide"><label>Custom URL</label><input type="text" id="ipurl" value="${esc(s.ip_provider_url)}"></div>
       </div>`)}
 
     ${section("Logging", `
@@ -59,11 +61,11 @@ export async function render(view) {
             <option ${s.ui_bind_host === "127.0.0.1" ? "selected" : ""}>127.0.0.1</option></select></div>
         <div class="field"><label>Port</label><input type="number" id="port" value="${s.ui_port}"></div>
       </div>
-      <div class="hint" style="color:var(--warning)">This app stores infrastructure credentials. Only expose it on trusted networks. Host/port changes need a service restart.</div>`)}
+      <div class="hint security-hint">This app stores infrastructure credentials. Only expose it on trusted networks. Host/port changes need a service restart.</div>`)}
 
     ${section("Advanced", `
       <div class="row">
-        <div class="field" style="flex:2"><label>Custom user agent</label><input type="text" id="ua" value="${esc(adv.user_agent || "")}" disabled></div>
+        <div class="field field-wide"><label>Custom user agent</label><input type="text" id="ua" value="${esc(adv.user_agent || "")}" disabled></div>
         <div class="field"><label>Retry attempts</label><input type="number" id="retries" value="${adv.retry_attempts || 3}" disabled></div>
         <div class="field"><label>Retry delays</label><input type="text" value="${(adv.retry_delays || [2, 5]).join(", ")}s" disabled></div>
       </div>`)}
@@ -71,15 +73,15 @@ export async function render(view) {
     ${section("About & Updates", `
       <div class="hrow"><span class="k">Version</span><span class="mono" id="cur-ver">…</span></div>
       <div class="hrow" id="latest-row" style="display:none"><span class="k">Latest release</span><span class="mono" id="latest-ver"></span></div>
-      <div class="row" style="margin-top:var(--space-3)">
-        <button class="btn btn-secondary" id="check-upd" style="flex:0 0 auto">Check for Updates</button>
-        <button class="btn btn-primary" id="run-upd" style="flex:0 0 auto;display:none">Update Now</button>
+      <div class="row settings-actions">
+        <button class="btn btn-secondary button-fixed" id="check-upd">Check for Updates</button>
+        <button class="btn btn-primary button-fixed" id="run-upd" style="display:none">Update Now</button>
       </div>
       <div class="update-status" id="update-status">No update check has run yet.</div>
       <pre class="update-log" id="update-log" style="display:none"></pre>
       <div class="hint">Updates download the latest release from GitHub, reinstall, and restart the service.</div>`)}
 
-    <button class="btn btn-primary" id="save" style="margin-top:var(--space-3)">Save Settings</button>`;
+    <button class="btn btn-primary settings-save" id="save">Save Settings</button>`;
 
   // About & Updates
   api.get("/health").then(h => { view.querySelector("#cur-ver").textContent = "v" + h.version; }).catch(() => {});
@@ -203,7 +205,7 @@ function pollUpdateStatus(statusEl, logEl) {
 }
 
 function section(title, inner) {
-  return `<div class="card" style="margin-bottom:var(--space-4)">
+  return `<div class="card section-card">
     <div class="card-title">${esc(title)}</div>${inner}</div>`;
 }
 
