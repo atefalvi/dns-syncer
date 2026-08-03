@@ -16,6 +16,7 @@ def test_status_setup_state():
     r = client.get("/api/status")
     assert r.status_code == 200
     assert r.json()["token_status"] == "missing"
+    assert "scheduler_status" in r.json()
 
 
 def test_token_masked_never_returns_plaintext():

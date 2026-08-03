@@ -47,3 +47,11 @@ def start() -> None:
 
 def stop() -> None:
     _stop.set()
+
+
+def status() -> str:
+    if _disabled():
+        return "disabled"
+    if _thread and _thread.is_alive():
+        return "running"
+    return "stopped"

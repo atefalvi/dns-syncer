@@ -1,9 +1,17 @@
 import { api } from "../api.js";
-import { esc, relTime } from "../format.js";
+import { esc } from "../format.js";
 import { toast, modal } from "../state.js";
 
-const TRIGGERS = ["SYNC_COMPLETE", "SYNC_FAILED", "RECORD_UPDATED",
-  "RECORD_UPDATE_FAILED", "TOKEN_INVALID", "SERVICE_STARTED"];
+const TRIGGERS = [
+  { id: "RECORD_UPDATED", label: "DNS record changed", desc: "Send only when Cloudflare is updated to a new IP." },
+  { id: "RECORD_UPDATE_FAILED", label: "Record update failed", desc: "Send when a specific DNS record could not be updated." },
+  { id: "SYNC_FAILED", label: "Sync failed", desc: "Send when DNS Syncer could not complete a sync run." },
+  { id: "TOKEN_INVALID", label: "Token invalid", desc: "Send when the Cloudflare API token fails verification." },
+  { id: "SYNC_COMPLETE", label: "Every sync check", desc: "Sends after every scheduled check, even when nothing changed." },
+  { id: "SERVICE_STARTED", label: "Service started", desc: "Sends when the DNS Syncer web service starts or restarts." },
+];
+
+const DEFAULT_TRIGGERS = ["RECORD_UPDATED"];
 
 const PRESETS = {
   webhook: { name: "Generic Webhook", body: {
@@ -62,7 +70,7 @@ export async function render(view) {
           <div class="desc">${esc(i.type)} · ${(i.trigger_events || []).length} event(s)</div></div>
         ${conn}
       </div>
-      <div class="desc mono">${(i.trigger_events || []).join(", ") || "No triggers"}</div>
+      <div class="desc">${eventSummary(i.trigger_events || [])}</div>
       <div class="foot">
         <button class="btn btn-ghost btn-sm" data-edit="${esc(i.id)}">Configure</button>
         <button class="btn btn-ghost btn-sm" data-test="${esc(i.id)}">Test</button>
@@ -79,14 +87,18 @@ function editor(existing, presetType, onDone) {
   const preset = PRESETS[type] || PRESETS.webhook;
   const body = existing?.body_template && Object.keys(existing.body_template).length
     ? existing.body_template : preset.body;
-  const triggers = existing?.trigger_events || ["SYNC_COMPLETE", "SYNC_FAILED", "RECORD_UPDATED"];
+  const triggers = existing?.trigger_events || DEFAULT_TRIGGERS;
 
   const m = modal(`<h3>${existing ? "Configure" : "New"} ${esc(type)} integration</h3>
     <div class="field"><label>Integration Name</label>
       <input type="text" id="name" value="${esc(existing?.name || preset.name)}"></div>
     <label class="switch"><input type="checkbox" id="enabled" ${existing?.enabled !== false ? "checked" : ""}>&nbsp;Enabled</label>
     <div class="field" style="margin-top:var(--space-4)"><label>Trigger Events</label>
-      <div class="checks">${TRIGGERS.map(t => `<label><input type="checkbox" value="${t}" ${triggers.includes(t) ? "checked" : ""}>${t}</label>`).join("")}</div>
+      <div class="hint">For change-only notifications, keep <strong>DNS record changed</strong> selected and uncheck every other event.</div>
+      <div class="event-options">${TRIGGERS.map(t => `<label class="event-option">
+        <input type="checkbox" value="${t.id}" ${triggers.includes(t.id) ? "checked" : ""}>
+        <span><strong>${esc(t.label)}</strong><small>${esc(t.id)} · ${esc(t.desc)}</small></span>
+      </label>`).join("")}</div>
     </div>
     <div class="row">
       <div class="field"><label>Method</label><select id="method">
@@ -113,7 +125,7 @@ function editor(existing, presetType, onDone) {
     const payload = {
       name: m.el.querySelector("#name").value.trim(), type,
       enabled: m.el.querySelector("#enabled").checked,
-      trigger_events: [...m.el.querySelectorAll(".checks input:checked")].map(c => c.value),
+      trigger_events: [...m.el.querySelectorAll(".event-options input:checked")].map(c => c.value),
       method: m.el.querySelector("#method").value,
       url: m.el.querySelector("#url").value.trim(),
       headers, body_template: bodyTpl,
@@ -125,4 +137,11 @@ function editor(existing, presetType, onDone) {
       toast("Saved", "success"); m.close(); onDone();
     } catch (err) { toast(err.message, "error"); e.target.disabled = false; }
   });
+}
+
+function eventSummary(events) {
+  if (!events.length) return "No triggers";
+  if (events.length === 1 && events[0] === "RECORD_UPDATED") return "Change-only notifications";
+  const labels = events.map(id => TRIGGERS.find(t => t.id === id)?.label || id);
+  return labels.join(", ");
 }

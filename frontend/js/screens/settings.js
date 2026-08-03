@@ -75,6 +75,7 @@ export async function render(view) {
         <button class="btn btn-secondary" id="check-upd" style="flex:0 0 auto">Check for Updates</button>
         <button class="btn btn-primary" id="run-upd" style="flex:0 0 auto;display:none">Update Now</button>
       </div>
+      <div class="update-status" id="update-status">No update check has run yet.</div>
       <div class="hint">Updates download the latest release from GitHub, reinstall, and restart the service.</div>`)}
 
     <button class="btn btn-primary" id="save" style="margin-top:var(--space-3)">Save Settings</button>`;
@@ -82,25 +83,51 @@ export async function render(view) {
   // About & Updates
   api.get("/health").then(h => { view.querySelector("#cur-ver").textContent = "v" + h.version; }).catch(() => {});
   view.querySelector("#check-upd").addEventListener("click", async (e) => {
+    const statusEl = view.querySelector("#update-status");
+    const runBtn = view.querySelector("#run-upd");
     e.target.disabled = true; e.target.textContent = "Checking…";
+    statusEl.textContent = "Checking GitHub releases…";
+    statusEl.className = "update-status";
     try {
       const r = await api.get("/update/check");
       const row = view.querySelector("#latest-row");
       row.style.display = ""; view.querySelector("#latest-ver").textContent = "v" + (r.latest || "?");
       if (r.update_available) {
-        view.querySelector("#run-upd").style.display = "";
+        runBtn.style.display = "";
+        runBtn.disabled = false;
+        runBtn.textContent = "Update Now";
+        statusEl.textContent = `v${r.latest} is available. Update from Settings or run sudo /opt/dns-syncer/update.sh.`;
+        statusEl.className = "update-status success";
         toast(`Update available: v${r.latest}`, "success");
       } else {
+        runBtn.style.display = "none";
+        statusEl.textContent = `DNS Syncer is current at v${r.current}.`;
+        statusEl.className = "update-status success";
         toast("You're on the latest version", "success");
       }
-    } catch (err) { toast(err.message, "error"); }
+    } catch (err) {
+      statusEl.textContent = err.message;
+      statusEl.className = "update-status error";
+      toast(err.message, "error");
+    }
     e.target.disabled = false; e.target.textContent = "Check for Updates";
   });
   view.querySelector("#run-upd").addEventListener("click", async (e) => {
     if (!confirm("Update DNS Syncer now? The app restarts in about a minute.")) return;
+    const statusEl = view.querySelector("#update-status");
     e.target.disabled = true; e.target.textContent = "Updating…";
-    try { const r = await api.post("/update/run"); toast(r.message, "success"); }
-    catch (err) { toast(err.message, "error"); e.target.disabled = false; e.target.textContent = "Update Now"; }
+    statusEl.textContent = "Starting detached updater…";
+    statusEl.className = "update-status";
+    try {
+      const r = await api.post("/update/run");
+      statusEl.textContent = r.message;
+      statusEl.className = "update-status success";
+      toast(r.message, "success");
+    } catch (err) {
+      statusEl.textContent = err.message;
+      statusEl.className = "update-status error";
+      toast(err.message, "error"); e.target.disabled = false; e.target.textContent = "Update Now";
+    }
   });
 
   // Token controls

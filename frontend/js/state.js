@@ -2,6 +2,7 @@
 export function toast(msg, kind = "") {
   const el = document.createElement("div");
   el.className = "toast " + kind;
+  el.setAttribute("role", kind === "error" ? "alert" : "status");
   el.textContent = msg;
   document.body.appendChild(el);
   setTimeout(() => el.remove(), 3200);
@@ -10,10 +11,16 @@ export function toast(msg, kind = "") {
 export function modal(html) {
   const back = document.createElement("div");
   back.className = "modal-back";
-  back.innerHTML = `<div class="modal">${html}</div>`;
+  back.innerHTML = `<div class="modal" role="dialog" aria-modal="true">${html}</div>`;
   back.addEventListener("click", (e) => { if (e.target === back) close(); });
-  const close = () => back.remove();
+  const onKey = (e) => { if (e.key === "Escape") close(); };
+  const close = () => {
+    document.removeEventListener("keydown", onKey);
+    back.remove();
+  };
   document.body.appendChild(back);
+  document.addEventListener("keydown", onKey);
+  back.querySelector("button, input, select, textarea")?.focus();
   return { el: back.querySelector(".modal"), close };
 }
 

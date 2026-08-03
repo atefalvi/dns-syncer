@@ -7,7 +7,7 @@ import uuid
 import httpx
 from fastapi import APIRouter, HTTPException, Query, Response
 
-from app import VERSION
+from app import VERSION, scheduler
 from app.settings import GITHUB_REPO, UPDATE_SCRIPT
 from app import (cloudflare_client as cf, config_store, integration_engine,
                  ip_provider, log_store, secret_store, sync_engine)
@@ -62,6 +62,7 @@ def status():
         "token_masked": secret_store.token_masked(),
         "service_status": _systemd_active("dns-syncer.service"),
         "timer_status": _systemd_active("dns-syncer.timer"),
+        "scheduler_status": scheduler.status(),
     }
 
 

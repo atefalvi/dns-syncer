@@ -9,11 +9,15 @@ export function relTime(iso) {
   if (!iso) return "—";
   const then = new Date(iso).getTime();
   if (isNaN(then)) return "—";
-  const s = Math.max(0, Math.round((Date.now() - then) / 1000));
-  if (s < 60) return s + "s ago";
-  if (s < 3600) return Math.round(s / 60) + "m ago";
-  if (s < 86400) return Math.round(s / 3600) + "h ago";
-  return Math.round(s / 86400) + "d ago";
+  const diff = Math.round((then - Date.now()) / 1000);
+  const future = diff > 0;
+  const s = Math.abs(diff);
+  if (s < 5) return future ? "in 1s" : "just now";
+  const value = s < 60 ? `${s}s`
+    : s < 3600 ? `${Math.round(s / 60)}m`
+      : s < 86400 ? `${Math.round(s / 3600)}h`
+        : `${Math.round(s / 86400)}d`;
+  return future ? `in ${value}` : `${value} ago`;
 }
 
 // "July 4, 2026 at 9:30 PM EDT" — browser's local timezone.
