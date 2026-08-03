@@ -101,9 +101,13 @@ def update_run():
     proc = subprocess.run(["sudo", "-n", UPDATE_SCRIPT, "--detach"],
                           capture_output=True, text=True, timeout=30)
     if proc.returncode != 0:
+        err = proc.stderr.strip()
+        if "no new privileges" in err.lower():
+            err += (" Update manually once with: sudo /opt/dns-syncer/update.sh. "
+                    "Then Settings updates will work after the fixed service unit is installed.")
         raise HTTPException(502, "Could not start updater: "
-                            + (proc.stderr.strip() or "sudo not permitted. "
-                               "Re-run the installer, or run: sudo /opt/dns-syncer/update.sh"))
+                            + (err or "sudo not permitted. Re-run the installer, "
+                               "or run: sudo /opt/dns-syncer/update.sh"))
     log_store.append("INFO", "UPDATE_STARTED", "Update started from web UI")
     return {"started": True, "message": "Updating — the app restarts in about a minute."}
 

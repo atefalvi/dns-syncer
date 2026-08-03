@@ -17,6 +17,7 @@ journalctl -u dns-syncer-sync.service -n 50   # scheduled sync
 | **Cloudflare rate limit (429)** | Transient. Sync retries automatically (3 attempts). If persistent, increase the sync interval. |
 | **Automatic sync not running** | Check the app first: `systemctl status dns-syncer.service`. The app has a fallback scheduler. Then check the timer: `systemctl status dns-syncer.timer` and `journalctl -u dns-syncer-sync.service -n 50`. Enable the timer with `sudo systemctl enable --now dns-syncer.timer`. |
 | **UI not reachable** | `systemctl status dns-syncer.service`. Confirm the bind host/port (Settings → Local App). If bound to `127.0.0.1` it's only reachable from the Pi itself. Check a firewall isn't blocking port 5055. |
+| **Settings update says "no new privileges"** | An older service unit blocked the web updater's sudo handoff. Run `sudo /opt/dns-syncer/update.sh` manually once, then future Settings updates will work with the fixed unit. |
 | **Permission denied** | Files under `/etc/dns-syncer` and `/var/log/dns-syncer` must be owned by `dns-syncer:dns-syncer`. Re-run the installer or `chown -R dns-syncer:dns-syncer` those paths. |
 | **Schedule change ignored** | Current releases apply interval changes automatically. If the old behavior persists, update DNS Syncer and verify `/etc/systemd/system/dns-syncer-sync.service` runs `python -m app.cli sync-due`. |
 

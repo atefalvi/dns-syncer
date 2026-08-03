@@ -12,7 +12,9 @@ Environment=DNS_SYNCER_FRONTEND=/opt/dns-syncer/frontend
 ExecStart=/opt/dns-syncer/.venv/bin/uvicorn app.main:app --host 0.0.0.0 --port 5055
 Restart=on-failure
 RestartSec=5
-NoNewPrivileges=true
+# Required for the web UI updater's narrow sudoers rule:
+# dns-syncer -> /opt/dns-syncer/update.sh --detach
+NoNewPrivileges=false
 ProtectSystem=full
 
 [Install]

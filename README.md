@@ -7,7 +7,7 @@
 A lightweight, self-hosted Cloudflare DNS updater with a local web UI —
 built to run quietly on a Raspberry Pi alongside your other home-lab services.
 
-![Version](https://img.shields.io/badge/version-0.2.3-FF5C38)
+![Version](https://img.shields.io/badge/version-0.2.4-FF5C38)
 ![Python](https://img.shields.io/badge/python-3.11%2B-3ECF8E)
 ![License](https://img.shields.io/badge/license-MIT-5CA7FF)
 ![Platform](https://img.shields.io/badge/platform-Raspberry%20Pi%20%7C%20Debian-A8B1BD)
@@ -163,8 +163,8 @@ Every integration has a **Test** button.
 - **Never exposed** — secrets are never logged and never returned to the
   browser; the UI shows only a masked value (`••••••••••••d3f7`).
 - **Least privilege** — runs as a dedicated non-login `dns-syncer` user with
-  `NoNewPrivileges` and `ProtectSystem=full`. The only sudo grant is the exact
-  root-owned updater command.
+  `ProtectSystem=full`. The only sudo grant is the exact root-owned updater
+  command used by Settings → About & Updates.
 - **Scoped token** — use a single-zone token with `Zone:Read` + `DNS:Edit` only.
 - **Nothing committed** — `.gitignore` excludes keys, secrets, env files, and
   local runtime data.
@@ -201,7 +201,7 @@ cd backend
 python -m venv .venv && source .venv/bin/activate
 pip install -e ".[dev]"
 DNS_SYNCER_DEV=1 uvicorn app.main:app --reload --port 5055   # http://localhost:5055
-pytest                                                        # 21 tests
+pytest                                                        # 22 tests
 ```
 
 Dev mode stores everything under `backend/.local/` — no root, no systemd needed.
