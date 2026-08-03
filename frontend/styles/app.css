@@ -241,6 +241,19 @@ input:focus, select:focus, textarea:focus { border-color: var(--border-2); }
 }
 .update-status.success { color: var(--success); border-color: color-mix(in srgb, var(--success) 35%, var(--border-1)); }
 .update-status.error { color: var(--danger); border-color: color-mix(in srgb, var(--danger) 35%, var(--border-1)); }
+.update-log {
+  margin-top: var(--space-2);
+  max-height: 180px;
+  overflow: auto;
+  background: var(--bg-0);
+  border: 1px solid var(--border-1);
+  border-radius: var(--radius-sm);
+  padding: var(--space-3);
+  color: var(--text-2);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  white-space: pre-wrap;
+}
 
 /* ---- Modal ---- */
 .modal-back {

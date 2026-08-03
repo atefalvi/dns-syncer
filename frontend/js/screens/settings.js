@@ -76,6 +76,7 @@ export async function render(view) {
         <button class="btn btn-primary" id="run-upd" style="flex:0 0 auto;display:none">Update Now</button>
       </div>
       <div class="update-status" id="update-status">No update check has run yet.</div>
+      <pre class="update-log" id="update-log" style="display:none"></pre>
       <div class="hint">Updates download the latest release from GitHub, reinstall, and restart the service.</div>`)}
 
     <button class="btn btn-primary" id="save" style="margin-top:var(--space-3)">Save Settings</button>`;
@@ -115,14 +116,17 @@ export async function render(view) {
   view.querySelector("#run-upd").addEventListener("click", async (e) => {
     if (!confirm("Update DNS Syncer now? The app restarts in about a minute.")) return;
     const statusEl = view.querySelector("#update-status");
+    const logEl = view.querySelector("#update-log");
     e.target.disabled = true; e.target.textContent = "Updating…";
     statusEl.textContent = "Starting detached updater…";
     statusEl.className = "update-status";
+    logEl.style.display = "none";
     try {
       const r = await api.post("/update/run");
       statusEl.textContent = r.message;
       statusEl.className = "update-status success";
       toast(r.message, "success");
+      pollUpdateStatus(statusEl, logEl);
     } catch (err) {
       statusEl.textContent = err.message;
       statusEl.className = "update-status error";
@@ -174,6 +178,28 @@ export async function render(view) {
     try { await api.patch("/settings", payload); toast("Settings saved", "success"); }
     catch (err) { toast(err.message, "error"); }
   });
+}
+
+function pollUpdateStatus(statusEl, logEl) {
+  let attempts = 0;
+  const timer = setInterval(async () => {
+    attempts += 1;
+    try {
+      const r = await api.get("/update/status");
+      if (r.status && r.status !== "idle") {
+        statusEl.textContent = `${r.status}: ${r.message}`;
+        statusEl.className = `update-status ${r.status === "failed" ? "error" : "success"}`;
+      }
+      if (r.log_tail?.length) {
+        logEl.style.display = "";
+        logEl.textContent = r.log_tail.slice(-12).join("\n");
+      }
+      if (["success", "failed"].includes(r.status) || attempts >= 24) clearInterval(timer);
+    } catch (_) {
+      // The service may be restarting. Keep polling until it comes back or times out.
+      if (attempts >= 24) clearInterval(timer);
+    }
+  }, 5000);
 }
 
 function section(title, inner) {

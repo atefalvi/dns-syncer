@@ -1,4 +1,5 @@
 """Local HTTP API. All routes are mounted under /api by main.py."""
+import json
 import os
 import subprocess
 import time
@@ -10,7 +11,7 @@ from fastapi import APIRouter, HTTPException, Query, Response
 from app import VERSION, scheduler
 from app.settings import GITHUB_REPO, UPDATE_SCRIPT
 from app import (cloudflare_client as cf, config_store, integration_engine,
-                 ip_provider, log_store, secret_store, sync_engine)
+                 ip_provider, log_store, paths, secret_store, sync_engine)
 from app.models import (AppSettings, IntegrationConfig, IntegrationPatch,
                         RecordCreate, RecordPatch, TokenBody)
 
@@ -111,6 +112,25 @@ def update_run():
                                "or run: sudo /opt/dns-syncer/update.sh"))
     log_store.append("INFO", "UPDATE_STARTED", "Update started from web UI")
     return {"started": True, "message": "Updating — the app restarts in about a minute."}
+
+
+@router.get("/update/status")
+def update_status():
+    status = {"status": "idle", "timestamp": None, "message": "No update has run yet",
+              "version": ""}
+    if paths.UPDATE_STATUS_FILE.exists():
+        try:
+            status = json.loads(paths.UPDATE_STATUS_FILE.read_text())
+        except Exception:
+            status = {"status": "unknown", "timestamp": None,
+                      "message": "Update status file could not be read", "version": ""}
+
+    if paths.UPDATE_LOG_FILE.exists():
+        lines = paths.UPDATE_LOG_FILE.read_text(errors="replace").splitlines()
+        status["log_tail"] = lines[-40:]
+    else:
+        status["log_tail"] = []
+    return status
 
 
 # --- sync ---

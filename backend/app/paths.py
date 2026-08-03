@@ -31,6 +31,8 @@ SECRETS_KEY_FILE = CONFIG_DIR / "secrets.key"
 SECRETS_ENC_FILE = CONFIG_DIR / "secrets.enc"
 STATE_FILE = STATE_DIR / "state.json"
 LOG_FILE = LOG_DIR / "events.jsonl"
+UPDATE_STATUS_FILE = STATE_DIR / "update-status.json"
+UPDATE_LOG_FILE = LOG_DIR / "update.log"
 
 # Static frontend, resolved relative to the installed app layout.
 FRONTEND_DIR = Path(os.environ.get("DNS_SYNCER_FRONTEND", Path(__file__).resolve().parents[2] / "frontend"))

@@ -7,7 +7,7 @@
 A lightweight, self-hosted Cloudflare DNS updater with a local web UI —
 built to run quietly on a Raspberry Pi alongside your other home-lab services.
 
-![Version](https://img.shields.io/badge/version-0.2.5-FF5C38)
+![Version](https://img.shields.io/badge/version-0.2.6-FF5C38)
 ![Python](https://img.shields.io/badge/python-3.11%2B-3ECF8E)
 ![License](https://img.shields.io/badge/license-MIT-5CA7FF)
 ![Platform](https://img.shields.io/badge/platform-Raspberry%20Pi%20%7C%20Debian-A8B1BD)
@@ -205,7 +205,7 @@ cd backend
 python -m venv .venv && source .venv/bin/activate
 pip install -e ".[dev]"
 DNS_SYNCER_DEV=1 uvicorn app.main:app --reload --port 5055   # http://localhost:5055
-pytest                                                        # 22 tests
+pytest                                                        # 23 tests
 ```
 
 Dev mode stores everything under `backend/.local/` — no root, no systemd needed.

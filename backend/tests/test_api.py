@@ -1,6 +1,6 @@
 from fastapi.testclient import TestClient
 
-from app import integration_engine, secret_store
+from app import integration_engine, paths, secret_store
 from app.main import app
 
 client = TestClient(app)
@@ -62,3 +62,18 @@ def test_render_template_unknown_tokens_do_not_leak():
         "content": "hi ",
         "exact": [{"record_name": "home.example.com"}],
     }
+
+
+def test_update_status_reads_status_and_log():
+    paths.UPDATE_STATUS_FILE.write_text(
+        '{"status":"failed","timestamp":"2026-01-01T00:00:00Z","message":"boom","version":"v1"}'
+    )
+    paths.UPDATE_LOG_FILE.write_text("line1\nline2\n")
+
+    r = client.get("/api/update/status")
+
+    assert r.status_code == 200
+    body = r.json()
+    assert body["status"] == "failed"
+    assert body["message"] == "boom"
+    assert body["log_tail"] == ["line1", "line2"]

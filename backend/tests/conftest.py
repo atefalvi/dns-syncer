@@ -16,7 +16,8 @@ def _fresh(tmp_path, monkeypatch):
     from app import paths
     for attr, name in [("CONFIG_FILE", "config.json"), ("SECRETS_KEY_FILE", "secrets.key"),
                        ("SECRETS_ENC_FILE", "secrets.enc"), ("STATE_FILE", "state.json"),
-                       ("LOG_FILE", "events.jsonl")]:
+                       ("LOG_FILE", "events.jsonl"), ("UPDATE_STATUS_FILE", "update-status.json"),
+                       ("UPDATE_LOG_FILE", "update.log")]:
         monkeypatch.setattr(paths, attr, tmp_path / name)
     monkeypatch.setattr(paths, "CONFIG_DIR", tmp_path)
     monkeypatch.setattr(paths, "STATE_DIR", tmp_path)
